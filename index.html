@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeluxeMenus Inventory Sub Menus Wiki</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202124;
+      --muted: #5f6672;
+      --line: #d7dce4;
+      --soft: #f5f7fa;
+      --panel: #ffffff;
+      --accent: #1f6feb;
+      --accent-soft: #e8f1ff;
+      --ok: #137333;
+      --warn: #b06000;
+      --code: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: #eef2f7;
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      padding: 28px 22px;
+      background: #fbfcfe;
+      border-right: 1px solid var(--line);
+    }
+
+    aside h2 {
+      margin: 0 0 6px;
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    aside p {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    nav {
+      display: grid;
+      gap: 4px;
+    }
+
+    nav a {
+      display: block;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: #394150;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: var(--accent-soft);
+      text-decoration: none;
+    }
+
+    main {
+      width: min(1040px, 100%);
+      padding: 42px 42px 72px;
+    }
+
+    header {
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .kicker {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 6vw, 56px);
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 18px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    section {
+      margin-top: 34px;
+      padding: 26px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 26px;
+      line-height: 1.2;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 24px 0 10px;
+      font-size: 18px;
+      line-height: 1.3;
+    }
+
+    p {
+      margin: 10px 0;
+    }
+
+    ul, ol {
+      padding-left: 24px;
+    }
+
+    li {
+      margin: 6px 0;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #edf1f7;
+      color: var(--code);
+      font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+      font-size: .94em;
+    }
+
+    pre {
+      overflow: auto;
+      margin: 14px 0;
+      padding: 16px;
+      border-radius: 8px;
+      background: #111827;
+      color: #f8fafc;
+      border: 1px solid #0b1220;
+    }
+
+    pre code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: pre;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--soft);
+    }
+
+    .note {
+      margin: 14px 0;
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      border-radius: 6px;
+    }
+
+    .ok {
+      border-left-color: var(--ok);
+      background: #eaf5ee;
+    }
+
+    .warn {
+      border-left-color: var(--warn);
+      background: #fff4e5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .mini {
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .mini strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    footer {
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      .shell {
+        display: block;
+      }
+
+      aside {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      main {
+        padding: 28px 18px 54px;
+      }
+
+      section {
+        padding: 20px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <h2>Inventory Sub Menus</h2>
+      <p>Hướng dẫn cấu hình menu dưới inventory cho DeluxeMenus fork.</p>
+      <nav aria-label="Mục lục">
+        <a href="#overview">Tổng quan</a>
+        <a href="#folders">Cấu trúc folder</a>
+        <a href="#first-sub-menu">Tạo sub menu đầu tiên</a>
+        <a href="#attach-default">Gắn sub menu mặc định</a>
+        <a href="#open-dynamic">Mở sub menu bằng click</a>
+        <a href="#sub-to-gui">Sub menu mở GUI chính</a>
+        <a href="#sub-to-sub">Sub menu mở sub menu khác</a>
+        <a href="#texturepack">Texture pack và model data</a>
+        <a href="#inventory-safety">Cách inventory được bảo vệ</a>
+        <a href="#rules">Quy tắc slot và tránh conflict</a>
+        <a href="#examples">Ví dụ đầy đủ</a>
+        <a href="#troubleshooting">Lỗi thường gặp</a>
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+        <p class="kicker">DeluxeMenus Extension Wiki</p>
+        <h1>Inventory Sub Menus</h1>
+        <p class="lead">Tính năng này cho phép render một menu phụ riêng vào 36 slot inventory dưới của player, giống một panel thứ hai. GUI chính vẫn là DeluxeMenus menu bình thường, còn phần dưới lấy config từ <code>sub_menus</code>.</p>
+      </header>
+
+      <section id="overview">
+        <h2>Tổng quan</h2>
+        <p>Trong Minecraft/Paper, server không thể mở hai cửa sổ inventory GUI độc lập cùng lúc cho một player. Vì vậy tính năng này hoạt động theo dạng overlay: DeluxeMenus mở GUI chính ở phần trên, rồi render một sub menu riêng vào phần inventory dưới của cùng inventory view.</p>
+        <div class="grid">
+          <div class="mini">
+            <strong>GUI chính</strong>
+            Nằm trong <code>gui_menus</code>, có thể mở bằng command, <code>[openguimenu]</code>, hoặc open command của DeluxeMenus.
+          </div>
+          <div class="mini">
+            <strong>Sub menu</strong>
+            Nằm trong <code>sub_menus</code>, file lưu ở folder <code>sub_menu</code>, chỉ dùng slot <code>0-35</code> để render xuống inventory dưới.
+          </div>
+        </div>
+        <p class="note">Sub menu vẫn dùng item/action/requirement của DeluxeMenus. Bạn có thể dùng custom model data, item hooks, lore, click commands, view requirements và update placeholders như menu bình thường.</p>
+      </section>
+
+      <section id="folders">
+        <h2>Cấu trúc folder</h2>
+        <p>File config chính vẫn nằm ở <code>plugins/DeluxeMenus/config.yml</code>. Menu chính và sub menu được tách riêng:</p>
+        <pre><code>plugins/DeluxeMenus/
+├─ config.yml
+├─ gui_menus/
+│  ├─ commandpanels/
+│  │  ├─ ascension.yml
+│  │  └─ dungeon.yml
+│  └─ main.yml
+└─ sub_menu/
+   ├─ bottom_toolbar.yml
+   ├─ tengui.yml
+   └─ dungeon_tabs.yml</code></pre>
+        <p>Khai báo trong <code>config.yml</code>:</p>
+        <pre><code>gui_menus:
+  ascension:
+    file: commandpanels/ascension.yml
+  dungeon:
+    file: commandpanels/dungeon.yml
+
+sub_menus:
+  test:
+    file: test.yml
+  bottom_toolbar:
+    file: bottom_toolbar.yml
+  tengui:
+    file: tengui.yml</code></pre>
+        <p class="warn">Tên section dưới <code>sub_menus</code> là tên dùng trong action, ví dụ <code>[open_gui_inventory] tengui</code>. File thực tế nằm trong folder <code>sub_menu</code>, không phải <code>gui_menus</code>.</p>
+      </section>
+
+      <section id="first-sub-menu">
+        <h2>Tạo sub menu đầu tiên</h2>
+        <p>Tạo file <code>plugins/DeluxeMenus/sub_menu/tengui.yml</code>. Sub menu chỉ cần khai báo item. <code>menu_title</code> không bắt buộc vì sub menu không tự mở một cửa sổ GUI riêng.</p>
+        <pre><code>size: 36
+
+items:
+  back_to_spawn:
+    material: COMPASS
+    slot: 0
+    display_name: "&lt;green&gt;Spawn"
+    lore:
+      - "&lt;gray&gt;Click để về khu spawn"
+    click_commands:
+      - "[player] spawn"
+
+  dungeon_page:
+    material: NETHER_STAR
+    slot: 8
+    display_name: "&lt;#ffcc66&gt;Dungeons"
+    right_click_commands:
+      - "[openguimenu] dungeon"</code></pre>
+        <p>Slot trong sub menu luôn là slot nội bộ <code>0-35</code>. DeluxeMenus sẽ tự offset nó xuống phần inventory dưới khi render.</p>
+      </section>
+
+      <section id="attach-default">
+        <h2>Gắn sub menu mặc định vào GUI chính</h2>
+        <p>Trong file GUI chính thuộc <code>gui_menus</code>, thêm <code>player_inventory_menu</code> trỏ đến tên sub menu đã khai báo trong <code>config.yml</code>.</p>
+        <pre><code>menu_title: "&lt;#75a7ff&gt;Ascension"
+size: 54
+player_inventory_menu: bottom_toolbar
+
+items:
+  dungeon:
+    material: DIAMOND_SWORD
+    slot: 22
+    display_name: "&lt;red&gt;Dungeon"
+    click_commands:
+      - "[openguimenu] dungeon"</code></pre>
+        <p>Có thể dùng alias <code>bottom_menu</code> nếu muốn config ngắn hơn:</p>
+        <pre><code>bottom_menu: bottom_toolbar</code></pre>
+        <p class="ok">Không bắt buộc bật <code>hide_player_inventory: true</code>. Nếu GUI có <code>player_inventory_menu</code>, DeluxeMenus tự ẩn inventory thật của player trước khi render sub menu.</p>
+      </section>
+
+      <section id="open-dynamic">
+        <h2>Mở sub menu bằng click</h2>
+        <p>Dùng action mới <code>[open_gui_inventory]</code> trong click command của item trên GUI chính hoặc item trong sub menu.</p>
+        <pre><code>items:
+  switch_toolbar:
+    material: HOPPER
+    slot: 31
+    display_name: "&lt;yellow&gt;Đổi thanh công cụ"
+    right_click_commands:
+      - "[open_gui_inventory] tengui"</code></pre>
+        <p>Khi player right-click item này, GUI chính phía trên vẫn giữ nguyên. Chỉ phần inventory dưới được thay bằng sub menu <code>tengui</code>.</p>
+      </section>
+
+      <section id="sub-to-gui">
+        <h2>Sub menu mở GUI chính</h2>
+        <p>Item trong sub menu có thể mở GUI chính bằng action DeluxeMenus bình thường:</p>
+        <pre><code>items:
+  open_dungeon:
+    material: NETHERITE_SWORD
+    slot: 4
+    display_name: "&lt;red&gt;Mở Dungeon"
+    click_commands:
+      - "[openguimenu] dungeon"</code></pre>
+        <p>Quy tắc giữ sub menu khi đổi GUI chính:</p>
+        <table>
+          <thead>
+            <tr>
+              <th>GUI chính mới</th>
+              <th>Sub menu dưới inventory</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Không có <code>player_inventory_menu</code></td>
+              <td>Giữ sub menu hiện tại.</td>
+            </tr>
+            <tr>
+              <td>Có <code>player_inventory_menu: bottom_toolbar</code></td>
+              <td>Thay phần dưới bằng <code>bottom_toolbar</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note">Cách này giúp chuyển trang ở GUI trên mà không bị mất panel dưới, nhưng vẫn cho phép GUI mới override sub menu nếu nó có cấu hình riêng.</p>
+      </section>
+
+      <section id="sub-to-sub">
+        <h2>Sub menu mở sub menu khác</h2>
+        <p>Sub menu có thể mở tiếp sub menu khác bằng cùng action <code>[open_gui_inventory]</code>.</p>
+        <pre><code>items:
+  next_tools:
+    material: ARROW
+    slot: 35
+    display_name: "&lt;aqua&gt;Trang kế"
+    click_commands:
+      - "[open_gui_inventory] dungeon_tabs"</code></pre>
+        <p>Phần GUI chính phía trên không đổi. Phần dưới được replace bằng sub menu mới, tránh việc chồng item hoặc duplicate slot.</p>
+      </section>
+
+      <section id="texturepack">
+        <h2>Texture pack và model data</h2>
+        <p>Sub menu hỗ trợ custom model data giống item DeluxeMenus bình thường. Đây là cách phù hợp để làm thanh texturepack ở inventory dưới.</p>
+        <pre><code>items:
+  resource_button:
+    material: PAPER
+    model_data: 12004
+    slot: 13
+    display_name: "&lt;#8bd3ff&gt;Nâng cấp đảo"
+    lore:
+      - "&lt;gray&gt;Texture pack button"
+    click_commands:
+      - "[openguimenu] island_upgrade"</code></pre>
+        <p>Nếu server dùng item hooks như ItemsAdder, Oraxen, Nexo, MMOItems hoặc HeadDatabase, hãy giữ đúng prefix material mà DeluxeMenus đang hỗ trợ trong project của bạn.</p>
+      </section>
+
+      <section id="inventory-safety">
+        <h2>Cách inventory được bảo vệ</h2>
+        <p>Khi cần render sub menu xuống phần inventory dưới, DeluxeMenus sẽ snapshot 36 storage slot thật của player, clear chúng tạm thời, rồi render item menu đã được đánh dấu nội bộ.</p>
+        <ul>
+          <li>Khi đóng menu, inventory thật được restore.</li>
+          <li>Khi player quit, reload hoặc shutdown, inventory thật được restore.</li>
+          <li>Khi player chết trong lúc menu đang mở, item menu không bị drop, còn item thật trong snapshot được xử lý để không mất đồ.</li>
+          <li>Nếu player đã bật <code>hide_player_inventory</code>, action sub menu dùng lại trạng thái đó.</li>
+        </ul>
+        <p class="warn">Không nên đặt item gameplay thật vào inventory dưới trong lúc GUI đang mở. Phần đó đang được dùng như bề mặt render cho menu.</p>
+      </section>
+
+      <section id="rules">
+        <h2>Quy tắc slot và tránh conflict</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Quy tắc</th>
+              <th>Chi tiết</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sub menu chỉ có slot <code>0-35</code></td>
+              <td>Slot ngoài phạm vi này bị bỏ qua khi load để tránh render ra ngoài phần inventory dưới.</td>
+            </tr>
+            <tr>
+              <td>Sub menu không nằm trong <code>gui_menus</code></td>
+              <td>Sub menu được load từ <code>sub_menus</code> và folder <code>sub_menu</code>.</td>
+            </tr>
+            <tr>
+              <td><code>[open_gui_inventory]</code> chỉ tìm sub menu</td>
+              <td>Nếu bạn đặt tên menu dưới <code>gui_menus</code>, action này sẽ không mở nó.</td>
+            </tr>
+            <tr>
+              <td><code>[openguimenu]</code> chỉ mở GUI chính</td>
+              <td>Dùng action này trong sub menu để đổi trang GUI trên.</td>
+            </tr>
+            <tr>
+              <td>GUI mới có sub menu mặc định sẽ override</td>
+              <td>Nếu GUI mới có <code>player_inventory_menu</code>, nó thay sub menu hiện tại để tránh conflict/dupe.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="examples">
+        <h2>Ví dụ đầy đủ</h2>
+        <h3><code>config.yml</code></h3>
+        <pre><code>gui_menus:
+  ascension:
+    file: commandpanels/ascension.yml
+  dungeon:
+    file: commandpanels/dungeon.yml
+
+sub_menus:
+  bottom_toolbar:
+    file: bottom_toolbar.yml
+  tengui:
+    file: tengui.yml</code></pre>
+
+        <h3><code>gui_menus/commandpanels/ascension.yml</code></h3>
+        <pre><code>menu_title: "&lt;#74b9ff&gt;Ascension"
+size: 54
+player_inventory_menu: bottom_toolbar
+
+items:
+  swap_bottom:
+    material: HOPPER
+    slot: 49
+    display_name: "&lt;yellow&gt;Đổi thanh dưới"
+    right_click_commands:
+      - "[open_gui_inventory] tengui"</code></pre>
+
+        <h3><code>sub_menu/bottom_toolbar.yml</code></h3>
+        <pre><code>size: 36
+
+items:
+  home:
+    material: COMPASS
+    slot: 0
+    display_name: "&lt;green&gt;Home"
+    click_commands:
+      - "[player] home"
+
+  dungeon:
+    material: NETHER_STAR
+    slot: 8
+    display_name: "&lt;red&gt;Dungeon"
+    click_commands:
+      - "[openguimenu] dungeon"</code></pre>
+
+        <h3><code>sub_menu/tengui.yml</code></h3>
+        <pre><code>size: 36
+
+items:
+  back:
+    material: ARROW
+    slot: 0
+    display_name: "&lt;gray&gt;Quay lại toolbar"
+    click_commands:
+      - "[open_gui_inventory] bottom_toolbar"
+
+  upgrade:
+    material: PAPER
+    model_data: 21001
+    slot: 13
+    display_name: "&lt;#ffcc66&gt;Upgrade"
+    click_commands:
+      - "[openguimenu] ascension"</code></pre>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>Lỗi thường gặp</h2>
+        <h3><code>[open_gui_inventory] tengui</code> không hiện gì</h3>
+        <ul>
+          <li>Kiểm tra <code>config.yml</code> có <code>sub_menus.tengui.file</code> chưa.</li>
+          <li>Kiểm tra file nằm đúng ở <code>plugins/DeluxeMenus/sub_menu/tengui.yml</code>.</li>
+          <li>Kiểm tra sub menu có ít nhất một item hợp lệ.</li>
+          <li>Kiểm tra slot item có nằm trong <code>0-35</code> không.</li>
+        </ul>
+
+        <h3>Sub menu đổi GUI trên nhưng mất panel dưới</h3>
+        <p>Nếu GUI mới có <code>player_inventory_menu</code>, panel dưới sẽ bị thay bằng sub menu mặc định của GUI mới. Nếu muốn giữ panel cũ, bỏ <code>player_inventory_menu</code> khỏi GUI mới.</p>
+
+        <h3>Item texturepack không hiện đúng</h3>
+        <p>Kiểm tra <code>material</code>, <code>model_data</code>, resource pack trên client, và namespace item hook nếu bạn dùng plugin item custom.</p>
+
+        <h3>Inventory thật của player bị che</h3>
+        <p>Đây là hành vi mong muốn khi mở sub menu. DeluxeMenus phải tạm ẩn 36 storage slot để dùng phần dưới làm GUI surface, sau đó restore khi đóng menu.</p>
+      </section>
+
+      <footer>
+        Trang này là wiki local cho tính năng inventory sub menus trong fork DeluxeMenus. Tham khảo wiki chính của DeluxeMenus tại <a href="https://wiki.helpch.at/helpchat-plugins/deluxemenus">wiki.helpch.at</a>.
+      </footer>
+    </main>
+  </div>
+</body>
+</html>
