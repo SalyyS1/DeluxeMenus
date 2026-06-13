@@ -59,6 +59,19 @@ body {
   max-width: 900px;
 }
 
+.markdown-section,
+.markdown-section p,
+.markdown-section li {
+  color: #e8edf2;
+}
+
+.markdown-section h1,
+.markdown-section h2,
+.markdown-section h3,
+.markdown-section h4 {
+  color: #f8fafc;
+}
+
 .markdown-section h1 {
   font-size: 2.25rem;
 }
@@ -82,7 +95,18 @@ body {
 }
 
 .sidebar {
+  background: #151a1f;
   border-right: 1px solid var(--sidebar-border-color);
+  color: #aeb9c4;
+}
+
+.sidebar ul li a {
+  color: #aeb9c4;
+}
+
+.sidebar ul li.active > a,
+.sidebar ul li a:hover {
+  color: #53d7ac;
 }
 
 .sidebar-nav > ul > li > a {
@@ -91,12 +115,15 @@ body {
 }
 
 .search {
+  background: #151a1f;
   border-bottom: 1px solid var(--sidebar-border-color) !important;
 }
 
 .search input {
+  background: #101418 !important;
   border: 1px solid var(--search-input-border-color) !important;
   border-radius: 6px;
+  color: #f8fafc !important;
   padding: 9px 10px;
 }
 
