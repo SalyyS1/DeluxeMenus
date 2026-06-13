@@ -1,0 +1,115 @@
+:root {
+  --theme-color: #10b981;
+  --base-background-color: #101418;
+  --base-color: #e8edf2;
+  --heading-color: #f8fafc;
+  --sidebar-background: #151a1f;
+  --sidebar-border-color: #29313a;
+  --sidebar-nav-link-color: #aeb9c4;
+  --sidebar-nav-link-color--active: #53d7ac;
+  --sidebar-nav-link-border-color--active: #10b981;
+  --search-background: #101418;
+  --search-input-background-color: #1a2026;
+  --search-input-border-color: #303a44;
+  --search-input-color: #f8fafc;
+  --code-inline-background: #20272e;
+  --code-inline-color: #8ce4c6;
+  --code-theme-background: #0b0e11;
+  --blockquote-background: #17251f;
+  --blockquote-border-color: #10b981;
+  --blockquote-color: #cbd5df;
+  --link-color: #53d7ac;
+  --link-color--hover: #86efcc;
+  --table-head-background: #1a2026;
+  --table-row-even-background: #151a1f;
+  --table-cell-border-color: #303a44;
+  --pagination-border-top: #303a44;
+  --copycode-background: #10b981;
+  --copycode-color: #062c20;
+  --notice-tip-background: #17251f;
+  --notice-tip-border-color: #10b981;
+}
+
+* {
+  letter-spacing: 0;
+}
+
+body {
+  background: var(--base-background-color);
+  color: var(--base-color);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.app-name-link {
+  color: var(--heading-color) !important;
+  font-weight: 750;
+}
+
+.app-name-link::after {
+  content: "Fork Docs";
+  display: block;
+  margin-top: 5px;
+  color: #7e8b97;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.markdown-section {
+  max-width: 900px;
+}
+
+.markdown-section h1 {
+  font-size: 2.25rem;
+}
+
+.markdown-section h2 {
+  border-bottom: 1px solid #303a44;
+  padding-bottom: 0.35em;
+}
+
+.markdown-section pre {
+  border: 1px solid #29313a;
+  border-radius: 6px;
+}
+
+.markdown-section code {
+  border-radius: 4px;
+}
+
+.markdown-section a {
+  font-weight: 600;
+}
+
+.sidebar {
+  border-right: 1px solid var(--sidebar-border-color);
+}
+
+.sidebar-nav > ul > li > a {
+  color: #f1f5f9;
+  font-weight: 700;
+}
+
+.search {
+  border-bottom: 1px solid var(--sidebar-border-color) !important;
+}
+
+.search input {
+  border: 1px solid var(--search-input-border-color) !important;
+  border-radius: 6px;
+  padding: 9px 10px;
+}
+
+.pagination-item-title {
+  color: var(--link-color);
+}
+
+@media screen and (max-width: 768px) {
+  .markdown-section {
+    padding: 24px 18px 48px;
+  }
+
+  .markdown-section h1 {
+    font-size: 1.8rem;
+  }
+}

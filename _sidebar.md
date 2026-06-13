@@ -1,0 +1,11 @@
+- **Getting Started**
+  - [Overview](README.md)
+  - [Menu Editors](menu-editors.md)
+  - [Troubleshooting](troubleshooting.md)
+- **Menu Features**
+  - [Menu Titles](menu-titles.md)
+  - [Animated Items](animated-items.md)
+  - [Player Inventory Submenus](player-inventory-submenus.md)
+- **Integrations**
+  - [Actions and Dialogs](actions-and-dialogs.md)
+  - [Custom Item Hooks](custom-item-hooks.md)
