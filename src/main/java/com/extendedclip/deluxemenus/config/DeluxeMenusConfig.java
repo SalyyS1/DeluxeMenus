@@ -9,6 +9,8 @@ import com.extendedclip.deluxemenus.hooks.ItemHook;
 import com.extendedclip.deluxemenus.menu.Menu;
 import com.extendedclip.deluxemenus.menu.MenuHolder;
 import com.extendedclip.deluxemenus.menu.MenuItem;
+import com.extendedclip.deluxemenus.menu.animation.AnimationMode;
+import com.extendedclip.deluxemenus.menu.animation.AnimationOptions;
 import com.extendedclip.deluxemenus.menu.options.CustomModelDataComponent;
 import com.extendedclip.deluxemenus.menu.options.LoreAppendMode;
 import com.extendedclip.deluxemenus.menu.options.MenuItemOptions;
@@ -99,7 +101,7 @@ public class DeluxeMenusConfig {
     private final File subMenuDirectory;
     private final File converterDirectory;
     private final DeluxeMenus plugin;
-    private final List<String> exampleMenus = Arrays.asList("basics_menu", "advanced_menu", "requirements_menu"
+    private final List<String> exampleMenus = Arrays.asList("basics_menu", "advanced_menu", "requirements_menu", "animated_menu"
             // more example menus here
     );
 
@@ -897,7 +899,13 @@ public class DeluxeMenusConfig {
                 slots.add(c.getInt(currentPath + "slot", 0));
             }
 
-            final MenuItem menuItem = new MenuItem(plugin, builder.build());
+            MenuItemOptions itemOptions = builder.build();
+            final AnimationOptions animation = loadAnimation(c.getConfigurationSection(currentPath + "animation"), itemOptions, key, name);
+            if (animation != null) {
+                itemOptions = itemOptions.asBuilder().animation(animation).build();
+            }
+
+            final MenuItem menuItem = new MenuItem(plugin, itemOptions);
 
             for (int slot : slots) {
                 if (subMenu && (slot < 0 || slot >= 36)) {
@@ -916,6 +924,84 @@ public class DeluxeMenusConfig {
             }
         }
         return menuItems;
+    }
+
+    private AnimationOptions loadAnimation(
+            final ConfigurationSection animationSection,
+            final MenuItemOptions parent,
+            final String itemKey,
+            final String menuName
+    ) {
+        if (animationSection == null) {
+            return null;
+        }
+
+        final ConfigurationSection framesSection = animationSection.getConfigurationSection("frames");
+        if (framesSection == null || framesSection.getKeys(false).isEmpty()) {
+            plugin.debug(
+                    DebugLevel.HIGHEST,
+                    Level.WARNING,
+                    "Animation for item: " + itemKey + " in menu: " + menuName + " has no frames.",
+                    "Skipping animation."
+            );
+            return null;
+        }
+
+        final List<MenuItemOptions> frames = new ArrayList<>();
+        for (final String frameKey : framesSection.getKeys(false)) {
+            final ConfigurationSection frame = framesSection.getConfigurationSection(frameKey);
+            if (frame == null) {
+                continue;
+            }
+
+            final String material = frame.getString("material", parent.material());
+            if (!isValidMaterial(material)) {
+                plugin.debug(
+                        DebugLevel.HIGHEST,
+                        Level.WARNING,
+                        "Material for animation frame: " + frameKey + " of item: " + itemKey + " in menu: " + menuName + " is not valid.",
+                        "Skipping frame."
+                );
+                continue;
+            }
+
+            final MenuItemOptions.MenuItemOptionsBuilder frameBuilder = parent.asBuilder()
+                    .animation(null)
+                    .material(material);
+
+            if (frame.contains("amount")) frameBuilder.amount(frame.getInt("amount"));
+            if (frame.contains("dynamic_amount")) frameBuilder.dynamicAmount(frame.getString("dynamic_amount"));
+            if (frame.contains("damage")) frameBuilder.damage(frame.getString("damage"));
+            if (frame.contains("model_data")) frameBuilder.customModelData(frame.getString("model_data"));
+            if (frame.contains("light_level")) frameBuilder.lightLevel(frame.getString("light_level"));
+            if (frame.contains("display_name")) frameBuilder.displayName(frame.getString("display_name"));
+            if (frame.contains("lore")) frameBuilder.lore(frame.getStringList("lore")).hasLore(true);
+            if (frame.contains("rgb")) frameBuilder.rgb(frame.getString("rgb"));
+            if (frame.contains("unbreakable")) frameBuilder.unbreakable(frame.getBoolean("unbreakable"));
+            if (frame.contains("hide_tooltip")) frameBuilder.hideTooltip(frame.getString("hide_tooltip"));
+            if (frame.contains("enchantment_glint_override")) frameBuilder.enchantmentGlintOverride(frame.getString("enchantment_glint_override"));
+            if (frame.contains("rarity")) frameBuilder.rarity(frame.getString("rarity"));
+            if (frame.contains("tooltip_style")) frameBuilder.tooltipStyle(frame.getString("tooltip_style"));
+            if (frame.contains("item_model")) frameBuilder.itemModel(frame.getString("item_model"));
+
+            frames.add(frameBuilder.build());
+        }
+
+        if (frames.isEmpty()) {
+            plugin.debug(
+                    DebugLevel.HIGHEST,
+                    Level.WARNING,
+                    "Animation for item: " + itemKey + " in menu: " + menuName + " has no valid frames.",
+                    "Skipping animation."
+            );
+            return null;
+        }
+
+        return new AnimationOptions(
+                Math.max(1, animationSection.getInt("interval", 5)),
+                AnimationMode.parse(animationSection.getString("mode", "loop")),
+                frames
+        );
     }
 
     private RequirementList getRequirements(FileConfiguration c, String path) {

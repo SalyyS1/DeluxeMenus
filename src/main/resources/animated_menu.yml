@@ -1,0 +1,31 @@
+menu_title: '&8Animated Menu'
+open_command: animatedmenu
+size: 27
+items:
+  animated_icon:
+    material: RED_WOOL
+    slot: 13
+    display_name: '&fAnimated icon'
+    lore:
+      - '&7The click action belongs to the parent item.'
+    left_click_commands:
+      - '[message] &aYou clicked the animated item.'
+    animation:
+      interval: 5
+      mode: ping_pong
+      frames:
+        red:
+          material: RED_WOOL
+          display_name: '&cRed frame'
+        yellow:
+          material: YELLOW_WOOL
+          display_name: '&eYellow frame'
+        green:
+          material: LIME_WOOL
+          display_name: '&aGreen frame'
+  server_links_dialog:
+    material: BOOK
+    slot: 22
+    display_name: '&bOpen Server Links Dialog'
+    left_click_commands:
+      - '[opendialog] minecraft:server_links'

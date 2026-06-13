@@ -1,6 +1,8 @@
 package com.extendedclip.deluxemenus.menu;
 
 import com.extendedclip.deluxemenus.DeluxeMenus;
+import com.extendedclip.deluxemenus.menu.animation.AnimationFrameCursor;
+import com.extendedclip.deluxemenus.menu.animation.AnimationOptions;
 import com.extendedclip.deluxemenus.menu.options.MenuOptions;
 import com.extendedclip.deluxemenus.scheduler.scheduling.schedulers.TaskScheduler;
 import com.extendedclip.deluxemenus.scheduler.scheduling.tasks.MyScheduledTask;
@@ -16,6 +18,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +39,9 @@ public class MenuHolder implements InventoryHolder {
     private Set<MenuItem> activeItems;
     private MyScheduledTask updateTask = null;
     private MyScheduledTask refreshTask = null;
+    private MyScheduledTask animationTask = null;
+    private final Map<Integer, AnimationFrameCursor> animationStates = new HashMap<>();
+    private final Map<Integer, AnimationOptions> activeAnimations = new HashMap<>();
     private Inventory inventory;
     private boolean updating;
     private boolean parsePlaceholdersInArguments;
@@ -183,7 +189,7 @@ public class MenuHolder implements InventoryHolder {
 
                 for (MenuItem item : active) {
 
-                    ItemStack iStack = item.getItemStack(this);
+                    ItemStack iStack = getAnimatedItemStack(item);
 
                     if (iStack == null) {
                         continue;
@@ -205,6 +211,7 @@ public class MenuHolder implements InventoryHolder {
                 }
 
                 setActiveItems(active);
+                syncAnimationTask();
 
                 if (update && updateTask == null) {
                     startUpdatePlaceholdersTask();
@@ -234,6 +241,83 @@ public class MenuHolder implements InventoryHolder {
             } catch (Exception ignored) {
             }
             refreshTask = null;
+        }
+    }
+
+    public void stopAnimationTask() {
+        if (animationTask != null) {
+            try {
+                animationTask.cancel();
+            } catch (Exception ignored) {
+            }
+            animationTask = null;
+        }
+        animationStates.clear();
+        activeAnimations.clear();
+    }
+
+    public void syncAnimationTask() {
+        final Set<MenuItem> items = getActiveItems();
+        final boolean hasAnimations = items != null && items.stream().anyMatch(item -> item.options().animation().isPresent());
+
+        if (!hasAnimations) {
+            stopAnimationTask();
+            return;
+        }
+
+        animationStates.keySet().removeIf(slot -> items.stream()
+                .noneMatch(item -> item.options().slot() == slot && item.options().animation().isPresent()));
+        activeAnimations.keySet().removeIf(slot -> items.stream()
+                .noneMatch(item -> item.options().slot() == slot && item.options().animation().isPresent()));
+
+        for (final MenuItem item : items) {
+            item.options().animation().ifPresent(animation -> {
+                final AnimationOptions previous = activeAnimations.put(item.options().slot(), animation);
+                if (previous != animation) {
+                    animationStates.remove(item.options().slot());
+                }
+            });
+        }
+
+        if (animationTask == null) {
+            animationTask = scheduler.runTaskTimer(viewer, this::animateItems, 1L, 1L);
+        }
+    }
+
+    public @Nullable ItemStack getAnimatedItemStack(final @NotNull MenuItem item) {
+        final Optional<AnimationOptions> optionalAnimation = item.options().animation();
+        if (optionalAnimation.isEmpty()) {
+            return item.getItemStack(this);
+        }
+
+        final AnimationOptions animation = optionalAnimation.get();
+        final AnimationFrameCursor state = animationStates.computeIfAbsent(item.options().slot(), ignored -> new AnimationFrameCursor());
+        final int frame = Math.min(state.frame(), animation.frames().size() - 1);
+        return new MenuItem(plugin, animation.frames().get(frame)).getItemStack(this);
+    }
+
+    private void animateItems() {
+        if (updating || getActiveItems() == null) {
+            return;
+        }
+
+        for (final MenuItem item : getActiveItems()) {
+            final Optional<AnimationOptions> optionalAnimation = item.options().animation();
+            if (optionalAnimation.isEmpty() || !isRenderedSlot(item.options().slot())) {
+                continue;
+            }
+
+            final AnimationOptions animation = optionalAnimation.get();
+            final AnimationFrameCursor state = animationStates.computeIfAbsent(item.options().slot(), ignored -> new AnimationFrameCursor());
+            if (!state.tick(animation.interval(), animation.mode(), animation.frames().size())) {
+                continue;
+            }
+
+            ItemStack itemStack = getAnimatedItemStack(item);
+            if (itemStack != null) {
+                itemStack = plugin.getMenuItemMarker().mark(itemStack);
+                setRenderedItem(item.options().slot(), itemStack);
+            }
         }
     }
 
@@ -284,6 +368,14 @@ public class MenuHolder implements InventoryHolder {
                     for (MenuItem item : items) {
 
                         if (item.options().updatePlaceholders()) {
+                            if (item.options().animation().isPresent()) {
+                                ItemStack animatedItem = getAnimatedItemStack(item);
+                                if (animatedItem != null) {
+                                    animatedItem = plugin.getMenuItemMarker().mark(animatedItem);
+                                    setRenderedItem(item.options().slot(), animatedItem);
+                                }
+                                continue;
+                            }
 
                             ItemStack i = getRenderedItem(item.options().slot());
 
@@ -523,4 +615,5 @@ public class MenuHolder implements InventoryHolder {
     public @NotNull DeluxeMenus getPlugin() {
         return plugin;
     }
+
 }

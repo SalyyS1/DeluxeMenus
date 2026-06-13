@@ -2,6 +2,7 @@ package com.extendedclip.deluxemenus.menu.options;
 
 import com.extendedclip.deluxemenus.action.ClickHandler;
 import com.extendedclip.deluxemenus.config.DeluxeMenusConfig;
+import com.extendedclip.deluxemenus.menu.animation.AnimationOptions;
 import com.extendedclip.deluxemenus.requirement.RequirementList;
 import org.bukkit.DyeColor;
 import org.bukkit.block.banner.Pattern;
@@ -67,6 +68,7 @@ public class MenuItemOptions {
     private final int slot;
     private final int priority;
     private final boolean updatePlaceholders;
+    private final AnimationOptions animation;
 
     private final ClickHandler clickHandler;
     private final ClickHandler leftClickHandler;
@@ -123,6 +125,7 @@ public class MenuItemOptions {
         this.slot = builder.slot;
         this.priority = builder.priority;
         this.updatePlaceholders = builder.updatePlaceholders;
+        this.animation = builder.animation;
         this.clickHandler = builder.clickHandler;
         this.leftClickHandler = builder.leftClickHandler;
         this.rightClickHandler = builder.rightClickHandler;
@@ -302,6 +305,10 @@ public class MenuItemOptions {
         return updatePlaceholders;
     }
 
+    public @NotNull Optional<AnimationOptions> animation() {
+        return Optional.ofNullable(animation);
+    }
+
     public @NotNull Optional<ClickHandler> clickHandler() {
         return Optional.ofNullable(clickHandler);
     }
@@ -393,6 +400,7 @@ public class MenuItemOptions {
                 .slot(this.slot)
                 .priority(this.priority)
                 .updatePlaceholders(this.updatePlaceholders)
+                .animation(this.animation)
                 .clickHandler(this.clickHandler)
                 .leftClickHandler(this.leftClickHandler)
                 .rightClickHandler(this.rightClickHandler)
@@ -456,6 +464,7 @@ public class MenuItemOptions {
         private int slot;
         private int priority;
         private boolean updatePlaceholders;
+        private AnimationOptions animation;
 
         private ClickHandler clickHandler;
         private ClickHandler leftClickHandler;
@@ -684,6 +693,11 @@ public class MenuItemOptions {
 
         public MenuItemOptionsBuilder updatePlaceholders(final boolean updatePlaceholders) {
             this.updatePlaceholders = updatePlaceholders;
+            return this;
+        }
+
+        public MenuItemOptionsBuilder animation(final @Nullable AnimationOptions animation) {
+            this.animation = animation;
             return this;
         }
 

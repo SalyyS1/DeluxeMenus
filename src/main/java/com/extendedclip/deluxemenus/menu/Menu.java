@@ -226,6 +226,7 @@ public class Menu {
 
         holder.stopPlaceholderUpdate();
         holder.stopRefreshTask();
+        holder.stopAnimationTask();
 
         if (executeCloseActions) {
             holder.getMenu().map(Menu::options).map(MenuOptions::closeHandler).flatMap(h -> h).ifPresent(h -> h.onClick(holder));
@@ -247,6 +248,8 @@ public class Menu {
     public static void closeMenuForShutdown(final @NotNull DeluxeMenus plugin, final @NotNull Player player) {
         getMenuHolder(player).ifPresent(holder -> {
             holder.stopPlaceholderUpdate();
+            holder.stopRefreshTask();
+            holder.stopAnimationTask();
             holder.restorePlayerInventory();
         });
 
@@ -382,7 +385,7 @@ public class Menu {
 
             for (MenuItem item : activeItems) {
 
-                ItemStack iStack = item.getItemStack(holder);
+                ItemStack iStack = holder.getAnimatedItemStack(item);
 
                 if (iStack == null) {
                     continue;
@@ -433,6 +436,7 @@ public class Menu {
                     holder.applyPlayerInventoryItems(playerInventoryItems);
                 }
                 menuHolders.add(holder);
+                holder.syncAnimationTask();
 
                 if (updatePlaceholders) {
                     holder.startUpdatePlaceholdersTask();
