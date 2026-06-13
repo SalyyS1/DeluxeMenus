@@ -1,4 +1,4 @@
-- **Getting Started**
+- **Reference**
   - [Overview](README.md)
   - [Menu Editors](menu-editors.md)
   - [Troubleshooting](troubleshooting.md)

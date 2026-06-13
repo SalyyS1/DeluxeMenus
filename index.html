@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101418">
-  <meta name="description" content="Documentation for the DeluxeMenus feature fork">
-  <title>DeluxeMenus Fork Documentation</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2210%22 fill=%22%2310b981%22/><path d=%22M16 17h20c9 0 15 6 15 15s-6 15-15 15H16V17zm11 9v12h9c3 0 5-2 5-6s-2-6-5-6h-9z%22 fill=%22white%22/></svg>">
+  <meta name="theme-color" content="#090c10">
+  <meta name="description" content="DeluxeMenus configuration and feature documentation">
+  <title>DeluxeMenus Documentation</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2210%22 fill=%22%2335d49a%22/><path d=%22M16 17h20c9 0 15 6 15 15s-6 15-15 15H16V17zm11 9v12h9c3 0 5-2 5-6s-2-6-5-6h-9z%22 fill=%22%23090c10%22/></svg>">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
   <link rel="stylesheet" href="site.css">
 </head>
@@ -14,7 +14,7 @@
   <div id="app">Loading documentation...</div>
   <script>
     window.$docsify = {
-      name: 'DeluxeMenus',
+      name: 'DeluxeMenus Docs',
       repo: 'SalyyS1/DeluxeMenus',
       homepage: 'README.md',
       loadSidebar: true,
@@ -41,7 +41,7 @@
       plugins: [
         function(hook) {
           hook.beforeEach(function(content) {
-            return content + '\n\n---\n[GitHub Wiki](https://github.com/SalyyS1/DeluxeMenus/wiki) · [Source repository](https://github.com/SalyyS1/DeluxeMenus)';
+            return content + '\n\n---\n[Documentation source](https://github.com/SalyyS1/DeluxeMenus/tree/wiki) | [Source repository](https://github.com/SalyyS1/DeluxeMenus)';
           });
         }
       ]
@@ -51,5 +51,7 @@
   <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@3/dist/docsify-copy-code.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2/dist/docsify-pagination.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
 </body>
 </html>
