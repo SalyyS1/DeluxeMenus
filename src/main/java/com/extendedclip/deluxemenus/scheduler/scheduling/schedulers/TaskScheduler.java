@@ -295,11 +295,20 @@ public interface TaskScheduler {
      */
     default <T> Future<T> callSyncMethod(final Callable<T> task) {
         CompletableFuture<T> completableFuture = new CompletableFuture<>();
+        if (isGlobalThread()) {
+            try {
+                completableFuture.complete(task.call());
+            } catch (Exception e) {
+                completableFuture.completeExceptionally(e);
+            }
+            return completableFuture;
+        }
+
         execute(() -> {
             try {
                 completableFuture.complete(task.call());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                completableFuture.completeExceptionally(e);
             }
         });
         return completableFuture;

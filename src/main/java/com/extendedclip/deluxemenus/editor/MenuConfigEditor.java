@@ -5,7 +5,10 @@ import com.extendedclip.deluxemenus.menu.Menu;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -49,18 +52,25 @@ public class MenuConfigEditor {
     }
 
     public void saveRaw(final @NotNull Menu menu, final @NotNull String raw) throws IOException {
+        final YamlConfiguration validated = new YamlConfiguration();
+        try {
+            validated.loadFromString(raw);
+        } catch (final InvalidConfigurationException exception) {
+            throw new IOException("Invalid YAML", exception);
+        }
+
         final Optional<File> optionalFile = resolveFile(menu);
         if (optionalFile.isPresent()) {
-            Files.writeString(optionalFile.get().toPath(), raw, StandardCharsets.UTF_8);
+            writeAtomically(optionalFile.get().toPath(), raw);
             return;
         }
 
         try {
-            plugin.getConfig().loadFromString(raw);
-            plugin.saveConfig();
+            plugin.getConfig().loadFromString(validated.saveToString());
         } catch (final InvalidConfigurationException exception) {
-            throw new IOException("Invalid YAML", exception);
+            throw new IOException("Could not apply validated YAML", exception);
         }
+        plugin.saveConfig();
     }
 
     public boolean setMaterial(final @NotNull Menu menu, final int slot, final @NotNull String material) throws IOException {
@@ -68,6 +78,7 @@ public class MenuConfigEditor {
     }
 
     public boolean setItemValue(final @NotNull Menu menu, final int slot, final @NotNull String option, final @NotNull String value) throws IOException {
+        validateSlot(menu, slot);
         final YamlConfiguration config = load(menu);
         final String itemPath = findOrCreateItemPath(config, menu, slot);
         if (itemPath == null) {
@@ -91,6 +102,7 @@ public class MenuConfigEditor {
     }
 
     public boolean deleteItem(final @NotNull Menu menu, final int slot) throws IOException {
+        validateSlot(menu, slot);
         final YamlConfiguration config = load(menu);
         final String itemPath = findItemPath(config, menu, slot);
         if (itemPath == null) {
@@ -106,8 +118,14 @@ public class MenuConfigEditor {
         final YamlConfiguration config = load(menu);
         final String root = getRoot(menu);
 
-        if ("size".equals(option)) {
-            config.set(root + option, parseInteger(value));
+        if ("menu_title".equals(option) && value.isBlank()) {
+            throw new IOException("Menu title cannot be empty");
+        } else if ("size".equals(option)) {
+            final int size = parseInteger(value);
+            if (size < 9 || size > 54 || size % 9 != 0) {
+                throw new IOException("Menu size must be a multiple of 9 between 9 and 54");
+            }
+            config.set(root + option, size);
         } else if (value.isBlank()) {
             config.set(root + option, null);
         } else {
@@ -176,12 +194,7 @@ public class MenuConfigEditor {
     private void save(final @NotNull Menu menu, final @NotNull YamlConfiguration config) throws IOException {
         final Optional<File> optionalFile = resolveFile(menu);
         if (optionalFile.isPresent()) {
-            final File file = optionalFile.get();
-            final File parent = file.getParentFile();
-            if (parent != null && !parent.exists()) {
-                parent.mkdirs();
-            }
-            config.save(file);
+            writeAtomically(optionalFile.get().toPath(), config.saveToString());
             return;
         }
 
@@ -249,11 +262,37 @@ public class MenuConfigEditor {
         return !"material".equals(option);
     }
 
-    private int parseInteger(final @NotNull String value) {
+    private int parseInteger(final @NotNull String value) throws IOException {
         try {
             return Integer.parseInt(value.trim());
         } catch (final NumberFormatException exception) {
-            return 0;
+            throw new IOException("Expected an integer but received: " + value, exception);
+        }
+    }
+
+    private void validateSlot(final @NotNull Menu menu, final int slot) throws IOException {
+        if (slot < 0 || slot >= menu.options().size()) {
+            throw new IOException("Slot must be between 0 and " + (menu.options().size() - 1));
+        }
+    }
+
+    private void writeAtomically(final @NotNull Path target, final @NotNull String content) throws IOException {
+        final Path parent = target.toAbsolutePath().getParent();
+        if (parent == null) {
+            throw new IOException("Could not resolve parent directory for " + target);
+        }
+
+        Files.createDirectories(parent);
+        final Path temporary = Files.createTempFile(parent, target.getFileName().toString(), ".tmp");
+        try {
+            Files.writeString(temporary, content, StandardCharsets.UTF_8);
+            try {
+                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (final AtomicMoveNotSupportedException ignored) {
+                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(temporary);
         }
     }
 

@@ -153,7 +153,7 @@ public class MenuHolder implements InventoryHolder {
 
         setUpdating(true);
 
-        scheduler.runTaskAsynchronously(() -> {
+        scheduler.runTask(viewer, () -> {
 
             final Set<MenuItem> active = menu.getActiveItems(this);
             final Set<Integer> slotsToClear = new HashSet<>();
@@ -332,7 +332,8 @@ public class MenuHolder implements InventoryHolder {
                 .map(MenuOptions::refreshInterval)
                 .orElse(10);
 
-        refreshTask = scheduler.runTaskTimerAsynchronously(
+        refreshTask = scheduler.runTaskTimer(
+                viewer,
                 this::refreshMenu,
                 initialDelay,
                 period

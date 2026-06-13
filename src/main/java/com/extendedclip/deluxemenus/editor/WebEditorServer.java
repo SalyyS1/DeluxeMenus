@@ -20,12 +20,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class WebEditorServer {
 
+    private static final int MAX_REQUEST_BODY_BYTES = 1024 * 1024;
     private final DeluxeMenus plugin;
     private final MenuConfigEditor configEditor;
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
@@ -50,7 +55,7 @@ public class WebEditorServer {
         ensureStarted(requestedPort);
 
         final String token = UUID.randomUUID().toString().replace("-", "");
-        final String url = "http://" + publicHost(requestedHost) + ":" + server.getAddress().getPort() + "/dm-web/" + token;
+        final String url = publicBaseUrl(requestedHost) + "/dm-web/" + token;
         sessions.put(token, new Session(token, menu.options().name(), url, Instant.now().plus(Duration.ofMinutes(60))));
 
         return url;
@@ -116,32 +121,39 @@ public class WebEditorServer {
         final String action = parts.length >= 4 ? parts[3] : "";
         final String method = exchange.getRequestMethod();
 
-        if ("save-menu".equals(action) && "POST".equalsIgnoreCase(method)) {
-            saveMenu(exchange, session);
-            return;
-        }
+        try {
+            if ("save-menu".equals(action) && "POST".equalsIgnoreCase(method)) {
+                saveMenu(exchange, session);
+                return;
+            }
 
-        if ("save-item".equals(action) && "POST".equalsIgnoreCase(method)) {
-            saveItem(exchange, session);
-            return;
-        }
+            if ("save-item".equals(action) && "POST".equalsIgnoreCase(method)) {
+                saveItem(exchange, session);
+                return;
+            }
 
-        if ("delete-item".equals(action) && "POST".equalsIgnoreCase(method)) {
-            deleteItem(exchange, session);
-            return;
-        }
+            if ("delete-item".equals(action) && "POST".equalsIgnoreCase(method)) {
+                deleteItem(exchange, session);
+                return;
+            }
 
-        if ("save-raw".equals(action) && "POST".equalsIgnoreCase(method)) {
-            saveRaw(exchange, session);
-            return;
-        }
+            if ("save-raw".equals(action) && "POST".equalsIgnoreCase(method)) {
+                saveRaw(exchange, session);
+                return;
+            }
 
-        if (!"GET".equalsIgnoreCase(method)) {
-            send(exchange, 405, "Method not allowed", "text/plain");
-            return;
-        }
+            if (!"GET".equalsIgnoreCase(method)) {
+                send(exchange, 405, "Method not allowed", "text/plain");
+                return;
+            }
 
-        render(exchange, session);
+            render(exchange, session);
+        } catch (final RequestTooLargeException exception) {
+            send(exchange, 413, "Request body is too large.", "text/plain");
+        } catch (final IOException exception) {
+            plugin.printStacktrace("Web editor request failed.", exception);
+            send(exchange, 400, exception.getMessage() == null ? "Invalid editor request." : exception.getMessage(), "text/plain");
+        }
     }
 
     private void render(final @NotNull HttpExchange exchange, final @NotNull Session session) throws IOException {
@@ -188,9 +200,10 @@ public class WebEditorServer {
 
         final Map<String, String> form = parseForm(readBody(exchange));
         final Menu menu = optionalMenu.get();
-        configEditor.setMenuValue(menu, "menu_title", form.getOrDefault("menu_title", menu.options().title()));
-        configEditor.setMenuValue(menu, "size", form.getOrDefault("size", String.valueOf(menu.options().size())));
-        reload(menu);
+        mutate(menu, () -> {
+            configEditor.setMenuValue(menu, "menu_title", form.getOrDefault("menu_title", menu.options().title()));
+            configEditor.setMenuValue(menu, "size", form.getOrDefault("size", String.valueOf(menu.options().size())));
+        });
         redirect(exchange, session, parseInt(form.get("slot")), "menu");
     }
 
@@ -203,8 +216,7 @@ public class WebEditorServer {
 
         final Map<String, String> form = parseForm(readBody(exchange));
         final Menu menu = optionalMenu.get();
-        configEditor.saveRaw(menu, form.getOrDefault("content", ""));
-        reload(menu);
+        mutate(menu, () -> configEditor.saveRaw(menu, form.getOrDefault("content", "")));
         redirect(exchange, session, parseInt(form.get("slot")), "raw");
     }
 
@@ -219,21 +231,22 @@ public class WebEditorServer {
         final int slot = parseInt(form.get("slot"));
         final Menu menu = optionalMenu.get();
         final String material = form.getOrDefault("material", "").isBlank() ? "STONE" : form.get("material");
-        configEditor.setItemValue(menu, slot, "material", material);
-        configEditor.setItemValue(menu, slot, "amount", form.getOrDefault("amount", "-1"));
-        configEditor.setItemValue(menu, slot, "priority", form.getOrDefault("priority", "1"));
-        configEditor.setItemValue(menu, slot, "display_name", form.getOrDefault("display_name", ""));
-        configEditor.setItemValue(menu, slot, "lore", form.getOrDefault("lore", ""));
-        configEditor.setItemValue(menu, slot, "model_data", form.getOrDefault("model_data", ""));
-        configEditor.setItemValue(menu, slot, "item_flags", form.getOrDefault("item_flags", ""));
-        configEditor.setItemValue(menu, slot, "update", form.containsKey("update") ? "true" : "false");
-        configEditor.setItemValue(menu, slot, "click_commands", form.getOrDefault("click_commands", ""));
-        configEditor.setItemValue(menu, slot, "left_click_commands", form.getOrDefault("left_click_commands", ""));
-        configEditor.setItemValue(menu, slot, "right_click_commands", form.getOrDefault("right_click_commands", ""));
-        configEditor.setItemValue(menu, slot, "shift_left_click_commands", form.getOrDefault("shift_left_click_commands", ""));
-        configEditor.setItemValue(menu, slot, "shift_right_click_commands", form.getOrDefault("shift_right_click_commands", ""));
-        configEditor.setItemValue(menu, slot, "middle_click_commands", form.getOrDefault("middle_click_commands", ""));
-        reload(menu);
+        mutate(menu, () -> {
+            configEditor.setItemValue(menu, slot, "material", material);
+            configEditor.setItemValue(menu, slot, "amount", form.getOrDefault("amount", "-1"));
+            configEditor.setItemValue(menu, slot, "priority", form.getOrDefault("priority", "1"));
+            configEditor.setItemValue(menu, slot, "display_name", form.getOrDefault("display_name", ""));
+            configEditor.setItemValue(menu, slot, "lore", form.getOrDefault("lore", ""));
+            configEditor.setItemValue(menu, slot, "model_data", form.getOrDefault("model_data", ""));
+            configEditor.setItemValue(menu, slot, "item_flags", form.getOrDefault("item_flags", ""));
+            configEditor.setItemValue(menu, slot, "update", form.containsKey("update") ? "true" : "false");
+            configEditor.setItemValue(menu, slot, "click_commands", form.getOrDefault("click_commands", ""));
+            configEditor.setItemValue(menu, slot, "left_click_commands", form.getOrDefault("left_click_commands", ""));
+            configEditor.setItemValue(menu, slot, "right_click_commands", form.getOrDefault("right_click_commands", ""));
+            configEditor.setItemValue(menu, slot, "shift_left_click_commands", form.getOrDefault("shift_left_click_commands", ""));
+            configEditor.setItemValue(menu, slot, "shift_right_click_commands", form.getOrDefault("shift_right_click_commands", ""));
+            configEditor.setItemValue(menu, slot, "middle_click_commands", form.getOrDefault("middle_click_commands", ""));
+        });
         redirect(exchange, session, slot, "slot");
     }
 
@@ -247,8 +260,7 @@ public class WebEditorServer {
         final Map<String, String> form = parseForm(readBody(exchange));
         final int slot = parseInt(form.get("slot"));
         final Menu menu = optionalMenu.get();
-        configEditor.deleteItem(menu, slot);
-        reload(menu);
+        mutate(menu, () -> configEditor.deleteItem(menu, slot));
         redirect(exchange, session, slot, "delete");
     }
 
@@ -391,8 +403,28 @@ public class WebEditorServer {
         return items.values().iterator().next().options().material();
     }
 
-    private void reload(final @NotNull Menu menu) {
-        plugin.getScheduler().runTask(() -> configEditor.reload(menu));
+    private void mutate(final @NotNull Menu menu, final @NotNull EditorMutation mutation) throws IOException {
+        final Future<Void> future = plugin.getScheduler().callSyncMethod(() -> {
+            mutation.run();
+            configEditor.reload(menu);
+            return null;
+        });
+
+        try {
+            future.get(10, TimeUnit.SECONDS);
+        } catch (final InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Web editor save was interrupted", exception);
+        } catch (final TimeoutException exception) {
+            future.cancel(false);
+            throw new IOException("Web editor save timed out", exception);
+        } catch (final ExecutionException exception) {
+            final Throwable cause = exception.getCause();
+            if (cause instanceof IOException) {
+                throw (IOException) cause;
+            }
+            throw new IOException("Web editor save failed", cause);
+        }
     }
 
     private void redirect(final @NotNull HttpExchange exchange, final @NotNull Session session, final int slot, final @NotNull String saved) throws IOException {
@@ -400,7 +432,21 @@ public class WebEditorServer {
     }
 
     private @NotNull String readBody(final @NotNull HttpExchange exchange) throws IOException {
-        return new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
+        final String contentLength = exchange.getRequestHeaders().getFirst("Content-Length");
+        if (contentLength != null) {
+            try {
+                if (Long.parseLong(contentLength) > MAX_REQUEST_BODY_BYTES) {
+                    throw new RequestTooLargeException();
+                }
+            } catch (final NumberFormatException ignored) {
+            }
+        }
+
+        final byte[] bytes = exchange.getRequestBody().readNBytes(MAX_REQUEST_BODY_BYTES + 1);
+        if (bytes.length > MAX_REQUEST_BODY_BYTES) {
+            throw new RequestTooLargeException();
+        }
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 
     private @NotNull Map<String, String> parseForm(final @Nullable String body) {
@@ -440,18 +486,29 @@ public class WebEditorServer {
         return value.substring(0, Math.max(0, limit - 1)) + "...";
     }
 
-    private @NotNull String publicHost(final @Nullable String requestedHost) {
-        final Optional<String> normalizedRequestHost = normalizeHost(requestedHost);
-        if (normalizedRequestHost.isPresent()) {
-            return normalizedRequestHost.get();
+    private @NotNull String publicBaseUrl(final @Nullable String requestedHost) {
+        if (requestedHost != null && !requestedHost.isBlank()) {
+            String requested = requestedHost.trim().replaceAll("/+$", "");
+            if (requested.contains("://")) {
+                final int pathIndex = requested.indexOf('/', requested.indexOf("://") + 3);
+                if (pathIndex >= 0) {
+                    requested = requested.substring(0, pathIndex);
+                }
+                return requested;
+            }
+
+            final Optional<String> normalizedRequestHost = normalizeHost(requested);
+            if (normalizedRequestHost.isPresent()) {
+                return "http://" + normalizedRequestHost.get() + ":" + server.getAddress().getPort();
+            }
         }
 
         final String configuredHost = plugin.getServer().getIp();
         if (configuredHost != null && !configuredHost.isBlank() && !"0.0.0.0".equals(configuredHost)) {
-            return normalizeHost(configuredHost).orElse(configuredHost);
+            return "http://" + normalizeHost(configuredHost).orElse(configuredHost) + ":" + server.getAddress().getPort();
         }
 
-        return "localhost";
+        return "http://localhost:" + server.getAddress().getPort();
     }
 
     private @NotNull Optional<String> normalizeHost(final @Nullable String host) {
@@ -557,6 +614,14 @@ public class WebEditorServer {
         public @NotNull String url() {
             return url;
         }
+    }
+
+    private static class RequestTooLargeException extends IOException {
+    }
+
+    @FunctionalInterface
+    private interface EditorMutation {
+        void run() throws IOException;
     }
 
     public static class SessionView {

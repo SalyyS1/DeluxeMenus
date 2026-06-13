@@ -99,7 +99,6 @@ public class DeluxeMenusConfig {
     private final String separator = File.separator;
     private final File menuDirectory;
     private final File subMenuDirectory;
-    private final File converterDirectory;
     private final DeluxeMenus plugin;
     private final List<String> exampleMenus = Arrays.asList("basics_menu", "advanced_menu", "requirements_menu", "animated_menu"
             // more example menus here
@@ -111,7 +110,6 @@ public class DeluxeMenusConfig {
         this.plugin = plugin;
         menuDirectory = new File(this.plugin.getDataFolder() + separator + "gui_menus");
         subMenuDirectory = new File(this.plugin.getDataFolder() + separator + "sub_menu");
-        converterDirectory = new File(this.plugin.getDataFolder() + separator + "converter");
         try {
             if (menuDirectory.mkdirs()) {
                 plugin.debug(DebugLevel.HIGH, Level.INFO, "Individual menus directory did not exist.", "Created directory: plugins" + separator + "DeluxeMenus" + separator + "gui_menus");
@@ -119,7 +117,6 @@ public class DeluxeMenusConfig {
             if (subMenuDirectory.mkdirs()) {
                 plugin.debug(DebugLevel.HIGH, Level.INFO, "Sub menu directory did not exist.", "Created directory: plugins" + separator + "DeluxeMenus" + separator + "sub_menu");
             }
-            converterDirectory.mkdirs();
         } catch (SecurityException e) {
             plugin.debug(DebugLevel.HIGHEST, Level.WARNING, "Something went wrong while creating DeluxeMenus directories.");
         }
@@ -210,12 +207,12 @@ public class DeluxeMenusConfig {
     }
 
     private boolean saveResourceToFile(String resource, File file) {
-        try {
-            InputStream is = plugin.getResource(resource);
-            byte[] buffer = new byte[is.available()];
-            is.read(buffer);
-            OutputStream os = new FileOutputStream(file);
-            os.write(buffer);
+        try (InputStream is = plugin.getResource(resource);
+             OutputStream os = new FileOutputStream(file)) {
+            if (is == null) {
+                return false;
+            }
+            is.transferTo(os);
             return true;
         } catch (NullPointerException | IOException ex) {
             plugin.printStacktrace("Failed to update file: " + resource, ex);
@@ -1448,10 +1445,6 @@ public class DeluxeMenusConfig {
 
     public File getSubMenuDirectory() {
         return subMenuDirectory;
-    }
-
-    public File getConverterDirectory() {
-        return converterDirectory;
     }
 
     public void addEnchantmentsOptionToBuilder(

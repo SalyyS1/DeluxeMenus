@@ -71,21 +71,16 @@ public class MenuItem {
     }
 
     public static ItemStack base64ToItemStack(String data) {
-        try {
-            byte[] bytes = Base64.getDecoder().decode(data);
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
-            BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
-            dataInput.close();
+        try (
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64.getDecoder().decode(data));
+                BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream)
+        ) {
             Object object = dataInput.readObject();
             if (object instanceof ItemStack) {
                 return (ItemStack) object;
             }
             return null;
-        } catch (IllegalArgumentException e) {
-            return null;
-        } catch (IOException e) {
-            return null;
-        } catch (ClassNotFoundException e) {
+        } catch (IllegalArgumentException | IOException | ClassNotFoundException e) {
             return null;
         }
     }

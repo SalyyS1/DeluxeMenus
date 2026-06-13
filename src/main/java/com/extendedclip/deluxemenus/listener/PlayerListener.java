@@ -68,7 +68,7 @@ public class PlayerListener extends Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(PlayerDeathEvent event) {
         final Player player = event.getEntity();
         final Optional<MenuHolder> optionalHolder = Menu.getMenuHolder(player);
@@ -88,7 +88,7 @@ public class PlayerListener extends Listener {
                 event.getDrops().add(itemStack);
             }
         }
-        holder.restorePlayerInventory();
+        Menu.closeMenu(plugin, player, false);
     }
 
     @EventHandler
@@ -101,6 +101,7 @@ public class PlayerListener extends Listener {
 
         if (player.isSleeping()) {
             event.setCancelled(true);
+            return;
         }
 
         if (Menu.isInMenu(player)) {
@@ -117,8 +118,13 @@ public class PlayerListener extends Listener {
 
         final Player player = (Player) event.getPlayer();
 
-        if (Menu.isInMenu(player)) {
+        final Optional<MenuHolder> optionalHolder = Menu.getMenuHolder(player);
+        if (optionalHolder.isPresent()) {
+            final MenuHolder holder = optionalHolder.get();
             scheduler.runTaskLater(player, () -> {
+                if (Menu.getMenuHolder(player).filter(current -> current == holder).isEmpty()) {
+                    return;
+                }
                 Menu.closeMenu(plugin, player, false);
                 Menu.cleanInventory(plugin, player);
                 player.updateInventory();
@@ -145,6 +151,7 @@ public class PlayerListener extends Listener {
 
         if (holder.getMenu().isEmpty()) {
             Menu.closeMenu(plugin, player, true);
+            return;
         }
 
         if (holder.isUpdating()) {

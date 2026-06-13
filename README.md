@@ -36,6 +36,7 @@ If you would like to contribute towards DeluxeMenus should you take a look at ou
 
 ## Quick Links
 - [Wiki](https://wiki.helpch.at/clips-plugins/deluxemenus/)
+- [Fork Feature Documentation](docs/README.md)
 - [CI Server][ci]
 - [Spigot Page][spigot]
 - [Plugin Statistics][bstats]

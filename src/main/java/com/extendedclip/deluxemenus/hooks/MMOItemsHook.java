@@ -59,7 +59,10 @@ public class MMOItemsHook implements ItemHook, SimpleCache {
 
                 return item;
             }).get();
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            plugin.debug(DebugLevel.HIGHEST, Level.SEVERE, "Interrupted while getting MMOItem synchronously.");
+        } catch (ExecutionException e) {
             plugin.debug(DebugLevel.HIGHEST, Level.SEVERE, "Error getting MMOItem synchronously.");
         }
 

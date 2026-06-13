@@ -279,7 +279,7 @@ public class WebEditorCommand extends SubCommand {
 
         final Optional<EditorEndpoint> endpoint = parseHostPort(publicUrl);
         if (endpoint.isPresent()) {
-            return endpoint;
+            return Optional.of(new EditorEndpoint(endpoint.get().port, Optional.of(publicUrl)));
         }
 
         return Optional.of(new EditorEndpoint(DEFAULT_PORT, Optional.of(publicUrl)));

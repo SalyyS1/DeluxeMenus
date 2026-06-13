@@ -354,7 +354,7 @@ public class Menu {
             return;
         }
 
-        scheduler.runTaskAsynchronously(() -> {
+        scheduler.runTask(viewer, () -> {
 
             Set<MenuItem> activeItems = getActiveItems(holder);
 

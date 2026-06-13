@@ -29,8 +29,8 @@ jobs:
     - name: Add SHORT_SHA env property with commit short sha
       run: echo "SHORT_SHA=`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
 
-    - name: Build with Gradle Wrapper
-      run: ./gradlew shadowJar
+    - name: Build and test with Gradle Wrapper
+      run: ./gradlew build
       env:
         BUILD_NUMBER: 'PR-${{ github.event.number }}-${{ env.SHORT_SHA }}'
 
