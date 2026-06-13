@@ -1,28 +1,30 @@
-# DeluxeMenus Fork Documentation
+# DeluxeMenus Documentation
 
-This Wiki documents the features maintained by the `SalyyS1/DeluxeMenus` fork.
-The upstream DeluxeMenus wiki remains the reference for standard menu,
-requirement, placeholder, and action configuration.
+Configuration reference for the extended DeluxeMenus build.
 
-## Feature Guides
+## Start Here
 
-- [Menu Editors](Menu-Editors)
-- [Menu Titles](Menu-Titles)
-- [Animated Items](Animated-Items)
-- [Player Inventory Submenus](Player-Inventory-Submenus)
-- [Actions and Dialogs](Actions-and-Dialogs)
-- [Custom Item Hooks](Custom-Item-Hooks)
-- [Troubleshooting](Troubleshooting)
+| Guide | Description |
+| --- | --- |
+| [Menu Editors](Menu-Editors) | Edit menus in-game or through the temporary browser editor |
+| [Player Inventory Submenus](Player-Inventory-Submenus) | Render configurable controls in the lower inventory |
+| [Animated Items](Animated-Items) | Configure loop, reverse, ping-pong, and random animations |
+| [Custom Item Hooks](Custom-Item-Hooks) | Use CraftEngine, MMOItems, ItemsAdder, Nexo, Oraxen, and more |
+| [Actions and Dialogs](Actions-and-Dialogs) | Open dialogs, menus, submenus, and external GUIs |
+| [Troubleshooting](Troubleshooting) | Resolve editor, hosting, and configuration issues |
 
 ## Compatibility
 
-- Java 11 or newer
-- Paper, Spigot, or Folia-compatible server software
-- PlaceholderAPI is required
-- Current compile target: Paper 1.21.11
+| Component | Support |
+| --- | --- |
+| Java | 11 or newer |
+| Server software | Paper, Spigot, Folia-compatible |
+| Required plugin | PlaceholderAPI |
+| Compile target | Paper 1.21.11 |
+| Minecraft dialogs | Minecraft 1.21.6 or newer |
 
-Features that depend on newer Minecraft APIs use runtime compatibility checks.
-For example, Minecraft dialogs require Minecraft 1.21.6 or newer.
+Features that depend on newer Minecraft APIs use runtime compatibility checks
+and fail gracefully on unsupported versions.
 
-The same documentation is available as a searchable
-[HTML site](https://salyys1.github.io/DeluxeMenus/).
+The full searchable documentation is deployed at
+[salyys1.github.io/DeluxeMenus](https://salyys1.github.io/DeluxeMenus/).
