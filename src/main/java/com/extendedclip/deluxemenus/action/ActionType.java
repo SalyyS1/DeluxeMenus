@@ -31,6 +31,7 @@ public enum ActionType {
   OPEN_GUI_INVENTORY("[open_gui_inventory]", "Open a GUI menu in the player inventory area",
       "- '[open_gui_inventory] <menu-name>'"),
   OPEN_MENU("[openmenu]", "Open a GUI menu", "- '[openmenu] <menu-name>'"),
+  OPEN_DIALOG("[opendialog]", "Open a registered Minecraft dialog", "- '[opendialog] <namespace:key>'"),
   CONNECT("[connect]", "Connect to the specified bungee server", "- '[connect] <serverName>'"),
   CLOSE("[close]", "Close the viewers open menu", "- '[close]"),
   REFRESH("[refresh]", "Refresh items in the current menu view", "- '[refresh]"),

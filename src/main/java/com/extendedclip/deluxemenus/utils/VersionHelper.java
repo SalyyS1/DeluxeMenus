@@ -21,6 +21,8 @@ public final class VersionHelper {
     private static final String PACKAGE_NAME = Bukkit.getServer().getClass().getPackage().getName();
     public static final String NMS_VERSION = PACKAGE_NAME.substring(PACKAGE_NAME.lastIndexOf('.') + 1);
 
+    // Dialogs
+    private static final int V1_21_6 = 1_21_6;
     // Custom Model Data Component
     private static final int V1_21_4 = 1_21_4;
     // Tooltip Style & Item Model
@@ -52,6 +54,8 @@ public final class VersionHelper {
      * Checks if the current version includes the setTooltipStyle and setItemModel
      */
     public static final boolean HAS_TOOLTIP_STYLE = CURRENT_VERSION >= V1_21_2;
+
+    public static final boolean HAS_DIALOGS = CURRENT_VERSION >= V1_21_6;
 
     /**
      * Checks if the current version includes the <a href="https://minecraft.wiki/w/Data_component_format">Data Components</a>
@@ -164,7 +168,12 @@ public final class VersionHelper {
             Class.forName("com.destroystokyo.paper.PaperConfig");
             return true;
         } catch (ClassNotFoundException ignored) {
-            return false;
+            try {
+                Class.forName("io.papermc.paper.event.player.AsyncChatEvent");
+                return true;
+            } catch (ClassNotFoundException ignoredAgain) {
+                return false;
+            }
         }
     }
 

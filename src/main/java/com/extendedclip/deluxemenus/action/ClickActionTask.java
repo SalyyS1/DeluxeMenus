@@ -293,6 +293,35 @@ public class ClickActionTask extends UniversalRunnable {
                 holder.get().openPlayerInventoryMenu(optionalInventoryMenu.get());
                 break;
 
+            case OPEN_DIALOG:
+                if (!VersionHelper.HAS_DIALOGS) {
+                    plugin.debug(
+                            DebugLevel.HIGHEST,
+                            Level.WARNING,
+                            "Cannot open dialog " + executable + " because dialogs require Minecraft 1.21.6 or newer."
+                    );
+                    break;
+                }
+
+                final String dialogKey = executable.trim();
+                if (!dialogKey.matches("[a-z0-9._-]+:[a-z0-9/._-]+")) {
+                    plugin.debug(
+                            DebugLevel.HIGHEST,
+                            Level.WARNING,
+                            "Cannot open dialog " + executable + " because it is not a valid namespaced key."
+                    );
+                    break;
+                }
+
+                if (!Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "minecraft:dialog show " + player.getName() + " " + dialogKey)) {
+                    plugin.debug(
+                            DebugLevel.HIGHEST,
+                            Level.WARNING,
+                            "Could not open dialog " + dialogKey + " for " + player.getName() + "."
+                    );
+                }
+                break;
+
             case CONNECT:
                 plugin.connect(player, executable);
                 break;
