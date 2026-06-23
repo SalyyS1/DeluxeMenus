@@ -165,13 +165,14 @@ public class MenuConfigEditor {
         Menu.unload(plugin, menuName);
         plugin.reloadConfig();
         plugin.reload();
-        if (subMenu) {
-            if (mainConfigMenu) {
-                plugin.getConfiguration().loadSubMenus();
-                return;
-            }
 
-            plugin.getConfiguration().loadSubMenuFromFile(menuName);
+        if (!mainConfigMenu) {
+            plugin.getConfiguration().loadMenuFromPath(menuName, menu.path(), subMenu);
+            return;
+        }
+
+        if (subMenu) {
+            plugin.getConfiguration().loadSubMenus();
             return;
         }
 

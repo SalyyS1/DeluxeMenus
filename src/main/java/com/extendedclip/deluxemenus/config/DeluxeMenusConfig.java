@@ -386,11 +386,51 @@ public class DeluxeMenusConfig {
         return loadMenuFromFile(menuName, true);
     }
 
+    public boolean loadMenuFromPath(final @NotNull String menuName, final @NotNull String fileName, final boolean subMenu) {
+        final File directory = subMenu ? subMenuDirectory : menuDirectory;
+
+        if (!fileName.endsWith(".yml")) {
+            plugin.debug(DebugLevel.HIGHEST, Level.SEVERE, "Filename specified for menu: " + menuName + " is not a .yml file!", "Make sure that the file name to load this menu from is specified as a .yml file!", "Skipping loading of menu: " + menuName);
+            return false;
+        }
+
+        final Path basePath = directory.toPath().toAbsolutePath().normalize();
+        final Path menuPath = new File(directory, fileName).toPath().toAbsolutePath().normalize();
+
+        if (!menuPath.startsWith(basePath)) {
+            plugin.debug(DebugLevel.HIGHEST, Level.SEVERE, "Menu file for menu: " + menuName + " is outside the menus directory!", "Skipping loading of menu: " + menuName);
+            return false;
+        }
+
+        final File f = menuPath.toFile();
+
+        if (!f.exists()) {
+            plugin.debug(DebugLevel.HIGHEST, Level.WARNING, "Menu file: " + fileName + " does not exist!", "Skipping loading of menu: " + menuName);
+            return false;
+        }
+
+        final FileConfiguration cfg = checkConfig(f);
+
+        if (cfg == null || cfg.getKeys(false).isEmpty()) {
+            plugin.debug(DebugLevel.HIGHEST, Level.WARNING, "Menu: " + menuName + " in file: " + fileName + " not loaded.");
+            return false;
+        }
+
+        final Path relativePath = basePath.relativize(menuPath);
+        loadMenu(cfg, menuName, false, relativePath.toString(), subMenu);
+        return subMenu ? Menu.getSubMenuByName(menuName).isPresent() : Menu.getMenuByName(menuName).isPresent();
+    }
+
     private boolean loadMenuFromFile(String menuName, final boolean subMenu) {
 
         final String configRoot = subMenu ? "sub_menus" : "gui_menus";
         final File directory = subMenu ? subMenuDirectory : menuDirectory;
         String fileName = plugin.getConfig().getString(configRoot + "." + menuName + ".file");
+
+        if (fileName == null) {
+            plugin.debug(DebugLevel.HIGHEST, Level.SEVERE, "No file is specified for menu: " + menuName + "!", "Skipping loading of menu: " + menuName);
+            return false;
+        }
 
         if (!fileName.endsWith(".yml")) {
             plugin.debug(DebugLevel.HIGHEST, Level.SEVERE, "Filename specified for menu: " + menuName + " is not a .yml file!", "Make sure that the file name to load this menu from is specified as a .yml file!", "Skipping loading of menu: " + menuName);

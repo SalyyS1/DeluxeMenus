@@ -55,9 +55,9 @@ public class MMOItemsHook implements ItemHook, SimpleCache {
                     return new ItemStack(Material.STONE, 1);
                 }
 
-                cache.put(arguments[0], item);
+                cache.put(arguments[0], item.clone());
 
-                return item;
+                return item.clone();
             }).get();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -66,7 +66,7 @@ public class MMOItemsHook implements ItemHook, SimpleCache {
             plugin.debug(DebugLevel.HIGHEST, Level.SEVERE, "Error getting MMOItem synchronously.");
         }
 
-        return mmoItem == null ? new ItemStack(Material.STONE, 1) : mmoItem;
+        return mmoItem == null ? new ItemStack(Material.STONE, 1) : mmoItem.clone();
     }
 
     @Override

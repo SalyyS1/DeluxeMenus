@@ -21,6 +21,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -35,6 +37,7 @@ public class WebEditorServer {
     private final MenuConfigEditor configEditor;
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
     private HttpServer server;
+    private ExecutorService httpExecutor;
 
     public WebEditorServer(final @NotNull DeluxeMenus plugin) {
         this.plugin = plugin;
@@ -85,6 +88,10 @@ public class WebEditorServer {
             server.stop(0);
             server = null;
         }
+        if (httpExecutor != null) {
+            httpExecutor.shutdownNow();
+            httpExecutor = null;
+        }
         sessions.clear();
     }
 
@@ -99,7 +106,8 @@ public class WebEditorServer {
 
         server = HttpServer.create(new InetSocketAddress(requestedPort), 0);
         server.createContext("/dm-web", this::handle);
-        server.setExecutor(null);
+        httpExecutor = Executors.newFixedThreadPool(4);
+        server.setExecutor(httpExecutor);
         server.start();
     }
 

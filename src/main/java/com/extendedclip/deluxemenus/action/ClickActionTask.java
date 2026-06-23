@@ -104,7 +104,15 @@ public class ClickActionTask extends UniversalRunnable {
 
             case PLAYER:
             case PLAYER_COMMAND_EVENT:
-                player.chat("/" + executable);
+                scheduler.runTaskLater(player, () -> {
+                    if (Menu.isInMenu(player)) {
+                        Menu.closeMenu(plugin, player, true, true);
+                        scheduler.runTaskLater(player, () -> player.chat("/" + executable), 1L);
+                        return;
+                    }
+
+                    player.chat("/" + executable);
+                }, 1L);
                 break;
 
             case PLACEHOLDER:

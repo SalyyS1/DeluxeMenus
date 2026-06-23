@@ -441,9 +441,7 @@ public class Menu {
                 if (updatePlaceholders) {
                     holder.startUpdatePlaceholdersTask();
                 }
-            });
 
-            scheduler.runTask(viewer, () -> {
                 DeluxeMenusOpenMenuEvent openEvent = new DeluxeMenusOpenMenuEvent(viewer, holder);
                 Bukkit.getPluginManager().callEvent(openEvent);
             });
