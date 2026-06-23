@@ -67,7 +67,7 @@ public class MenuEditorListener extends Listener {
 
         final Player player = (Player) event.getWhoClicked();
         final MenuEditorHolder editorHolder = (MenuEditorHolder) holder;
-        final Optional<Menu> optionalMenu = findMenu(editorHolder.menuName());
+        final Optional<Menu> optionalMenu = findMenu(editorHolder.menuName(), editorHolder.subMenu());
         if (optionalMenu.isEmpty()) {
             player.closeInventory();
             plugin.sms(player, text("Menu is no longer loaded.", NamedTextColor.RED));
@@ -156,7 +156,7 @@ public class MenuEditorListener extends Listener {
             final int slot,
             final @NotNull String option
     ) {
-        MenuEditPromptRegistry.begin(player, menu.options().name(), slot, option);
+        MenuEditPromptRegistry.begin(player, menu.options().name(), menu.options().subMenu(), slot, option);
         player.closeInventory();
 
         final String current = configEditor.getItemString(menu, slot, option).orElse("-");
@@ -180,7 +180,7 @@ public class MenuEditorListener extends Listener {
             return;
         }
 
-        findMenu(menu.options().name()).ifPresent(reloaded -> editorManager.openSlot(player, reloaded, slot));
+        findMenu(menu.options().name(), menu.options().subMenu()).ifPresent(reloaded -> editorManager.openSlot(player, reloaded, slot));
     }
 
     private void deleteItem(final @NotNull Player player, final @NotNull Menu menu, final int slot) {
@@ -196,15 +196,10 @@ public class MenuEditorListener extends Listener {
             return;
         }
 
-        findMenu(menu.options().name()).ifPresent(reloaded -> editorManager.open(player, reloaded));
+        findMenu(menu.options().name(), menu.options().subMenu()).ifPresent(reloaded -> editorManager.open(player, reloaded));
     }
 
-    private @NotNull Optional<Menu> findMenu(final @NotNull String menuName) {
-        final Optional<Menu> menu = Menu.getMenuByName(menuName);
-        if (menu.isPresent()) {
-            return menu;
-        }
-
-        return Menu.getSubMenuByName(menuName);
+    private @NotNull Optional<Menu> findMenu(final @NotNull String menuName, final boolean subMenu) {
+        return subMenu ? Menu.getSubMenuByName(menuName) : Menu.getMenuByName(menuName);
     }
 }

@@ -1,6 +1,8 @@
 package com.extendedclip.deluxemenus.placeholder;
 
 import com.extendedclip.deluxemenus.DeluxeMenus;
+import com.extendedclip.deluxemenus.hooks.InspectableItemHook;
+import com.extendedclip.deluxemenus.hooks.ItemHook;
 import com.extendedclip.deluxemenus.menu.Menu;
 import com.extendedclip.deluxemenus.menu.options.MenuOptions;
 import com.extendedclip.deluxemenus.persistentmeta.DataType;
@@ -11,10 +13,13 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 
 public class Expansion extends PlaceholderExpansion {
 
@@ -50,6 +55,14 @@ public class Expansion extends PlaceholderExpansion {
                 "%deluxemenus_is_in_menu%",
                 "%deluxemenus_opened_menu%",
                 "%deluxemenus_last_menu%",
+                "%deluxemenus_mmoitems_type_<slot|hand|offhand>%",
+                "%deluxemenus_mmoitems_id_<slot|hand|offhand>%",
+                "%deluxemenus_mmoitems_has_<type>:<id>%",
+                "%deluxemenus_mmoitems_amount_<type>:<id>%",
+                "%deluxemenus_mmoitems_stat_<stat>%",
+                "%deluxemenus_mythicmobs_id_<slot|hand|offhand>%",
+                "%deluxemenus_mythicmobs_has_<id>%",
+                "%deluxemenus_mythicmobs_amount_<id>%",
                 "%deluxemenus_meta_has_value_<key>_[type]%",
                 "%deluxemenus_meta_<key>_<type>_[default-value]%"
         );
@@ -79,6 +92,14 @@ public class Expansion extends PlaceholderExpansion {
             case "last_menu": {
                 return Menu.getLastMenu(onlinePlayer).map(Menu::options).map(MenuOptions::name).orElse("");
             }
+        }
+
+        if (parsedInputLower.startsWith("mmoitems_")) {
+            return inspectHookPlaceholder("mmoitems", parsedInput.substring("mmoitems_".length()), onlinePlayer);
+        }
+
+        if (parsedInputLower.startsWith("mythicmobs_")) {
+            return inspectHookPlaceholder("mythicmobs", parsedInput.substring("mythicmobs_".length()), onlinePlayer);
         }
 
         if (!parsedInputLower.startsWith("meta_")) {
@@ -150,5 +171,72 @@ public class Expansion extends PlaceholderExpansion {
 
     private @NotNull String getBooleanAsString(final boolean value) {
         return value ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
+    }
+
+    private @Nullable String inspectHookPlaceholder(
+            final @NotNull String hookName,
+            final @NotNull String input,
+            final @NotNull Player player
+    ) {
+        final Optional<ItemHook> optionalHook = plugin.getItemHook(hookName);
+        if (optionalHook.isEmpty() || !(optionalHook.get() instanceof InspectableItemHook)) {
+            return "";
+        }
+
+        final InspectableItemHook hook = (InspectableItemHook) optionalHook.get();
+        final String lowerInput = input.toLowerCase(Locale.ROOT);
+
+        if (lowerInput.startsWith("has_")) {
+            return getBooleanAsString(hook.hasItem(player, input.substring(4)));
+        }
+
+        if (lowerInput.startsWith("amount_")) {
+            return String.valueOf(hook.countItems(player, input.substring(7)));
+        }
+
+        if (lowerInput.startsWith("stat_")) {
+            return hook.getPlayerStat(player, input.substring(5)).orElse("");
+        }
+
+        if (lowerInput.startsWith("type_")) {
+            return getPlayerItem(player, input.substring(5))
+                    .flatMap(hook::getItemType)
+                    .orElse("");
+        }
+
+        if (lowerInput.startsWith("id_")) {
+            return getPlayerItem(player, input.substring(3))
+                    .flatMap(hook::getItemIdentifier)
+                    .orElse("");
+        }
+
+        return null;
+    }
+
+    private @NotNull Optional<ItemStack> getPlayerItem(final @NotNull Player player, final @NotNull String source) {
+        final String normalized = source.toLowerCase(Locale.ROOT);
+        switch (normalized) {
+            case "hand":
+            case "mainhand":
+            case "main_hand":
+                return Optional.of(player.getInventory().getItemInMainHand());
+            case "offhand":
+            case "off_hand":
+                return Optional.of(player.getInventory().getItemInOffHand());
+            case "helmet":
+                return Optional.ofNullable(player.getInventory().getHelmet());
+            case "chestplate":
+                return Optional.ofNullable(player.getInventory().getChestplate());
+            case "leggings":
+                return Optional.ofNullable(player.getInventory().getLeggings());
+            case "boots":
+                return Optional.ofNullable(player.getInventory().getBoots());
+            default:
+                try {
+                    return Optional.ofNullable(player.getInventory().getItem(Integer.parseInt(normalized)));
+                } catch (final NumberFormatException exception) {
+                    return Optional.empty();
+                }
+        }
     }
 }

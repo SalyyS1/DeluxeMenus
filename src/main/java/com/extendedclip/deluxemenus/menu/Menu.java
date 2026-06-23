@@ -72,6 +72,15 @@ public class Menu {
     }
 
     public static void unload(final @NotNull DeluxeMenus plugin, final @NotNull String name) {
+        unload(plugin, name, Menu.getMenuByName(name).isEmpty());
+    }
+
+    public static void unload(final @NotNull DeluxeMenus plugin, final @NotNull String name, final boolean subMenu) {
+        if (subMenu) {
+            subMenus.remove(name);
+            return;
+        }
+
         for (Player p : Bukkit.getOnlinePlayers()) {
             if (isInMenu(p, name)) {
                 closeMenu(plugin, p, true);
@@ -80,7 +89,6 @@ public class Menu {
 
         Optional<Menu> optionalMenu = Menu.getMenuByName(name);
         if (optionalMenu.isEmpty()) {
-            subMenus.remove(name);
             return;
         }
 

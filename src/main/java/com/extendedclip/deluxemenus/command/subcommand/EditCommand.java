@@ -200,7 +200,7 @@ public class EditCommand extends SubCommand {
         }
 
         final Player player = (Player) sender;
-        MenuEditPromptRegistry.begin(player, menu.options().name(), slot, option);
+        MenuEditPromptRegistry.begin(player, menu.options().name(), menu.options().subMenu(), slot, option);
         plugin.sms(player, Component.text("Type the new " + option + " in chat, or type cancel.", NamedTextColor.YELLOW));
     }
 

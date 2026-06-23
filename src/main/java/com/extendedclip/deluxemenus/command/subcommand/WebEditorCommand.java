@@ -106,7 +106,7 @@ public class WebEditorCommand extends SubCommand {
             plugin.sms(sender, text("Use /dm webeditor resume " + optionalMenu.get().options().name() + " or /dm webeditor cancel " + optionalMenu.get().options().name() + ".", NamedTextColor.GRAY));
         } catch (final IOException exception) {
             plugin.printStacktrace("Failed to start web editor.", exception);
-            plugin.sms(sender, text("Failed to start web editor.", NamedTextColor.RED));
+            plugin.sms(sender, text(exception.getMessage() == null ? "Failed to start web editor." : exception.getMessage(), NamedTextColor.RED));
         }
     }
 
@@ -150,7 +150,8 @@ public class WebEditorCommand extends SubCommand {
         plugin.sms(sender, text("Active web editor sessions:", NamedTextColor.GOLD));
         for (final WebEditorServer.SessionView session : sessions) {
             final long minutes = Math.max(0, Duration.between(Instant.now(), session.expiresAt()).toMinutes());
-            plugin.sms(sender, text("- " + session.menuName() + " (" + minutes + "m): ", NamedTextColor.GRAY)
+            final String label = session.menuName() + (session.subMenu() ? " (submenu)" : "");
+            plugin.sms(sender, text("- " + label + " (" + minutes + "m): ", NamedTextColor.GRAY)
                     .append(text(session.url(), NamedTextColor.YELLOW).clickEvent(ClickEvent.openUrl(session.url()))));
         }
     }

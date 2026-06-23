@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,7 +51,7 @@ public class WebEditorServer {
             final @Nullable String requestedHost
     ) throws IOException {
         cleanupSessions();
-        final Optional<Session> activeSession = activeSession(menu.options().name());
+        final Optional<Session> activeSession = activeSession(menu);
         if (activeSession.isPresent()) {
             throw new ActiveSessionException(activeSession.get().url);
         }
@@ -59,7 +60,7 @@ public class WebEditorServer {
 
         final String token = UUID.randomUUID().toString().replace("-", "");
         final String url = publicBaseUrl(requestedHost) + "/dm-web/" + token;
-        sessions.put(token, new Session(token, menu.options().name(), url, Instant.now().plus(Duration.ofMinutes(60))));
+        sessions.put(token, new Session(token, menu.options().name(), menu.options().subMenu(), url, Instant.now().plus(Duration.ofMinutes(60))));
 
         return url;
     }
@@ -79,7 +80,7 @@ public class WebEditorServer {
     public @NotNull List<SessionView> listSessions() {
         cleanupSessions();
         return sessions.values().stream()
-                .map(session -> new SessionView(session.menuName, session.url, session.expiresAt))
+                .map(session -> new SessionView(session.menuName, session.subMenu, session.url, session.expiresAt))
                 .collect(Collectors.toList());
     }
 
@@ -99,6 +100,10 @@ public class WebEditorServer {
         if (server != null) {
             if (server.getAddress().getPort() == requestedPort) {
                 return;
+            }
+
+            if (!sessions.isEmpty()) {
+                throw new IOException("Web editor is already running on port " + server.getAddress().getPort() + ". Cancel active sessions before changing the port.");
             }
 
             stop();
@@ -165,14 +170,18 @@ public class WebEditorServer {
     }
 
     private void render(final @NotNull HttpExchange exchange, final @NotNull Session session) throws IOException {
-        final Optional<Menu> optionalMenu = findMenu(session.menuName);
+        final Map<String, String> query = parseForm(exchange.getRequestURI().getRawQuery());
+        final RenderResponse response = await(plugin.getScheduler().callSyncMethod(() -> renderResponse(session, query)), "Web editor render");
+        send(exchange, response.status, response.body, response.contentType);
+    }
+
+    private @NotNull RenderResponse renderResponse(final @NotNull Session session, final @NotNull Map<String, String> query) throws IOException {
+        final Optional<Menu> optionalMenu = findMenu(session);
         if (optionalMenu.isEmpty()) {
-            send(exchange, 404, "Menu is not loaded.", "text/plain");
-            return;
+            return new RenderResponse(404, "Menu is not loaded.", "text/plain");
         }
 
         final Menu menu = optionalMenu.get();
-        final Map<String, String> query = parseForm(exchange.getRequestURI().getRawQuery());
         final int selectedSlot = clamp(parseInt(query.get("slot")), 0, Math.max(0, menu.options().size() - 1));
         final String saved = query.getOrDefault("saved", "");
         final String html = "<!doctype html><html><head><meta charset=\"utf-8\">"
@@ -196,79 +205,55 @@ public class WebEditorServer {
                 + "</main>"
                 + script()
                 + "</body></html>";
-        send(exchange, 200, html, "text/html; charset=utf-8");
+        return new RenderResponse(200, html, "text/html; charset=utf-8");
     }
 
     private void saveMenu(final @NotNull HttpExchange exchange, final @NotNull Session session) throws IOException {
-        final Optional<Menu> optionalMenu = findMenu(session.menuName);
-        if (optionalMenu.isEmpty()) {
-            send(exchange, 404, "Menu is not loaded.", "text/plain");
-            return;
-        }
-
         final Map<String, String> form = parseForm(readBody(exchange));
-        final Menu menu = optionalMenu.get();
-        mutate(menu, () -> {
-            configEditor.setMenuValue(menu, "menu_title", form.getOrDefault("menu_title", menu.options().title()));
-            configEditor.setMenuValue(menu, "size", form.getOrDefault("size", String.valueOf(menu.options().size())));
+        mutate(session, menu -> {
+            final Map<String, String> values = new LinkedHashMap<>();
+            values.put("menu_title", form.getOrDefault("menu_title", menu.options().title()));
+            values.put("size", form.getOrDefault("size", String.valueOf(menu.options().size())));
+            configEditor.setMenuValues(menu, values);
         });
         redirect(exchange, session, parseInt(form.get("slot")), "menu");
     }
 
     private void saveRaw(final @NotNull HttpExchange exchange, final @NotNull Session session) throws IOException {
-        final Optional<Menu> optionalMenu = findMenu(session.menuName);
-        if (optionalMenu.isEmpty()) {
-            send(exchange, 404, "Menu is not loaded.", "text/plain");
-            return;
-        }
-
         final Map<String, String> form = parseForm(readBody(exchange));
-        final Menu menu = optionalMenu.get();
-        mutate(menu, () -> configEditor.saveRaw(menu, form.getOrDefault("content", "")));
+        mutate(session, menu -> configEditor.saveRaw(menu, form.getOrDefault("content", "")));
         redirect(exchange, session, parseInt(form.get("slot")), "raw");
     }
 
     private void saveItem(final @NotNull HttpExchange exchange, final @NotNull Session session) throws IOException {
-        final Optional<Menu> optionalMenu = findMenu(session.menuName);
-        if (optionalMenu.isEmpty()) {
-            send(exchange, 404, "Menu is not loaded.", "text/plain");
-            return;
-        }
-
         final Map<String, String> form = parseForm(readBody(exchange));
         final int slot = parseInt(form.get("slot"));
-        final Menu menu = optionalMenu.get();
         final String material = form.getOrDefault("material", "").isBlank() ? "STONE" : form.get("material");
-        mutate(menu, () -> {
-            configEditor.setItemValue(menu, slot, "material", material);
-            configEditor.setItemValue(menu, slot, "amount", form.getOrDefault("amount", "-1"));
-            configEditor.setItemValue(menu, slot, "priority", form.getOrDefault("priority", "1"));
-            configEditor.setItemValue(menu, slot, "display_name", form.getOrDefault("display_name", ""));
-            configEditor.setItemValue(menu, slot, "lore", form.getOrDefault("lore", ""));
-            configEditor.setItemValue(menu, slot, "model_data", form.getOrDefault("model_data", ""));
-            configEditor.setItemValue(menu, slot, "item_flags", form.getOrDefault("item_flags", ""));
-            configEditor.setItemValue(menu, slot, "update", form.containsKey("update") ? "true" : "false");
-            configEditor.setItemValue(menu, slot, "click_commands", form.getOrDefault("click_commands", ""));
-            configEditor.setItemValue(menu, slot, "left_click_commands", form.getOrDefault("left_click_commands", ""));
-            configEditor.setItemValue(menu, slot, "right_click_commands", form.getOrDefault("right_click_commands", ""));
-            configEditor.setItemValue(menu, slot, "shift_left_click_commands", form.getOrDefault("shift_left_click_commands", ""));
-            configEditor.setItemValue(menu, slot, "shift_right_click_commands", form.getOrDefault("shift_right_click_commands", ""));
-            configEditor.setItemValue(menu, slot, "middle_click_commands", form.getOrDefault("middle_click_commands", ""));
+        mutate(session, menu -> {
+            final Map<String, String> values = new LinkedHashMap<>();
+            values.put("material", material);
+            values.put("amount", form.getOrDefault("amount", "-1"));
+            values.put("priority", form.getOrDefault("priority", "1"));
+            values.put("display_name", form.getOrDefault("display_name", ""));
+            values.put("lore", form.getOrDefault("lore", ""));
+            values.put("model_data", form.getOrDefault("model_data", ""));
+            values.put("item_flags", form.getOrDefault("item_flags", ""));
+            values.put("update", form.containsKey("update") ? "true" : "false");
+            values.put("click_commands", form.getOrDefault("click_commands", ""));
+            values.put("left_click_commands", form.getOrDefault("left_click_commands", ""));
+            values.put("right_click_commands", form.getOrDefault("right_click_commands", ""));
+            values.put("shift_left_click_commands", form.getOrDefault("shift_left_click_commands", ""));
+            values.put("shift_right_click_commands", form.getOrDefault("shift_right_click_commands", ""));
+            values.put("middle_click_commands", form.getOrDefault("middle_click_commands", ""));
+            configEditor.setItemValues(menu, slot, values);
         });
         redirect(exchange, session, slot, "slot");
     }
 
     private void deleteItem(final @NotNull HttpExchange exchange, final @NotNull Session session) throws IOException {
-        final Optional<Menu> optionalMenu = findMenu(session.menuName);
-        if (optionalMenu.isEmpty()) {
-            send(exchange, 404, "Menu is not loaded.", "text/plain");
-            return;
-        }
-
         final Map<String, String> form = parseForm(readBody(exchange));
         final int slot = parseInt(form.get("slot"));
-        final Menu menu = optionalMenu.get();
-        mutate(menu, () -> configEditor.deleteItem(menu, slot));
+        mutate(session, menu -> configEditor.deleteItem(menu, slot));
         redirect(exchange, session, slot, "delete");
     }
 
@@ -288,18 +273,20 @@ public class WebEditorServer {
                 .findFirst();
     }
 
+    private @NotNull Optional<Session> activeSession(final @NotNull Menu menu) {
+        return sessions.values().stream()
+                .filter(session -> session.menuName.equalsIgnoreCase(menu.options().name()))
+                .filter(session -> session.subMenu == menu.options().subMenu())
+                .findFirst();
+    }
+
     private void cleanupSessions() {
         final Instant now = Instant.now();
         sessions.entrySet().removeIf(entry -> entry.getValue().expiresAt.isBefore(now));
     }
 
-    private @NotNull Optional<Menu> findMenu(final @NotNull String menuName) {
-        final Optional<Menu> menu = Menu.getMenuByName(menuName);
-        if (menu.isPresent()) {
-            return menu;
-        }
-
-        return Menu.getSubMenuByName(menuName);
+    private @NotNull Optional<Menu> findMenu(final @NotNull Session session) {
+        return session.subMenu ? Menu.getSubMenuByName(session.menuName) : Menu.getMenuByName(session.menuName);
     }
 
     private @NotNull String renderGrid(final @NotNull Menu menu, final @NotNull Session session, final int selectedSlot) {
@@ -411,27 +398,37 @@ public class WebEditorServer {
         return items.values().iterator().next().options().material();
     }
 
-    private void mutate(final @NotNull Menu menu, final @NotNull EditorMutation mutation) throws IOException {
+    private void mutate(final @NotNull Session session, final @NotNull EditorMutation mutation) throws IOException {
         final Future<Void> future = plugin.getScheduler().callSyncMethod(() -> {
-            mutation.run();
+            final Optional<Menu> optionalMenu = findMenu(session);
+            if (optionalMenu.isEmpty()) {
+                throw new IOException("Menu is not loaded.");
+            }
+
+            final Menu menu = optionalMenu.get();
+            mutation.run(menu);
             configEditor.reload(menu);
             return null;
         });
 
+        await(future, "Web editor save");
+    }
+
+    private <T> T await(final @NotNull Future<T> future, final @NotNull String action) throws IOException {
         try {
-            future.get(10, TimeUnit.SECONDS);
+            return future.get(10, TimeUnit.SECONDS);
         } catch (final InterruptedException exception) {
             Thread.currentThread().interrupt();
-            throw new IOException("Web editor save was interrupted", exception);
+            throw new IOException(action + " was interrupted", exception);
         } catch (final TimeoutException exception) {
             future.cancel(false);
-            throw new IOException("Web editor save timed out", exception);
+            throw new IOException(action + " timed out", exception);
         } catch (final ExecutionException exception) {
             final Throwable cause = exception.getCause();
             if (cause instanceof IOException) {
                 throw (IOException) cause;
             }
-            throw new IOException("Web editor save failed", cause);
+            throw new IOException(action + " failed", cause);
         }
     }
 
@@ -629,22 +626,28 @@ public class WebEditorServer {
 
     @FunctionalInterface
     private interface EditorMutation {
-        void run() throws IOException;
+        void run(@NotNull Menu menu) throws IOException;
     }
 
     public static class SessionView {
         private final String menuName;
+        private final boolean subMenu;
         private final String url;
         private final Instant expiresAt;
 
-        private SessionView(final @NotNull String menuName, final @NotNull String url, final @NotNull Instant expiresAt) {
+        private SessionView(final @NotNull String menuName, final boolean subMenu, final @NotNull String url, final @NotNull Instant expiresAt) {
             this.menuName = menuName;
+            this.subMenu = subMenu;
             this.url = url;
             this.expiresAt = expiresAt;
         }
 
         public @NotNull String menuName() {
             return menuName;
+        }
+
+        public boolean subMenu() {
+            return subMenu;
         }
 
         public @NotNull String url() {
@@ -659,19 +662,34 @@ public class WebEditorServer {
     private static class Session {
         private final String token;
         private final String menuName;
+        private final boolean subMenu;
         private final String url;
         private final Instant expiresAt;
 
         private Session(
                 final @NotNull String token,
                 final @NotNull String menuName,
+                final boolean subMenu,
                 final @NotNull String url,
                 final @NotNull Instant expiresAt
         ) {
             this.token = token;
             this.menuName = menuName;
+            this.subMenu = subMenu;
             this.url = url;
             this.expiresAt = expiresAt;
+        }
+    }
+
+    private static class RenderResponse {
+        private final int status;
+        private final String body;
+        private final String contentType;
+
+        private RenderResponse(final int status, final @NotNull String body, final @NotNull String contentType) {
+            this.status = status;
+            this.body = body;
+            this.contentType = contentType;
         }
     }
 }

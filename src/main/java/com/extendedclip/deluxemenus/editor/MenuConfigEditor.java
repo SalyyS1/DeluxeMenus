@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.bukkit.configuration.ConfigurationSection;
@@ -78,6 +79,10 @@ public class MenuConfigEditor {
     }
 
     public boolean setItemValue(final @NotNull Menu menu, final int slot, final @NotNull String option, final @NotNull String value) throws IOException {
+        return setItemValues(menu, slot, Map.of(option, value));
+    }
+
+    public boolean setItemValues(final @NotNull Menu menu, final int slot, final @NotNull Map<String, String> values) throws IOException {
         validateSlot(menu, slot);
         final YamlConfiguration config = load(menu);
         final String itemPath = findOrCreateItemPath(config, menu, slot);
@@ -85,16 +90,8 @@ public class MenuConfigEditor {
             return false;
         }
 
-        if (isListOption(option)) {
-            config.set(itemPath + "." + option, parseList(value));
-        } else if (isIntegerOption(option)) {
-            config.set(itemPath + "." + option, parseInteger(value));
-        } else if (isBooleanOption(option)) {
-            config.set(itemPath + "." + option, Boolean.parseBoolean(value));
-        } else if (value.isBlank() && isOptionalOption(option)) {
-            config.set(itemPath + "." + option, null);
-        } else {
-            config.set(itemPath + "." + option, value);
+        for (final Map.Entry<String, String> entry : values.entrySet()) {
+            setItemOption(config, itemPath, entry.getKey(), entry.getValue());
         }
 
         save(menu, config);
@@ -115,9 +112,46 @@ public class MenuConfigEditor {
     }
 
     public boolean setMenuValue(final @NotNull Menu menu, final @NotNull String option, final @NotNull String value) throws IOException {
+        return setMenuValues(menu, Map.of(option, value));
+    }
+
+    public boolean setMenuValues(final @NotNull Menu menu, final @NotNull Map<String, String> values) throws IOException {
         final YamlConfiguration config = load(menu);
         final String root = getRoot(menu);
 
+        for (final Map.Entry<String, String> entry : values.entrySet()) {
+            setMenuOption(config, root, entry.getKey(), entry.getValue());
+        }
+
+        save(menu, config);
+        return true;
+    }
+
+    private void setItemOption(
+            final @NotNull YamlConfiguration config,
+            final @NotNull String itemPath,
+            final @NotNull String option,
+            final @NotNull String value
+    ) throws IOException {
+        if (isListOption(option)) {
+            config.set(itemPath + "." + option, parseList(value));
+        } else if (isIntegerOption(option)) {
+            config.set(itemPath + "." + option, parseInteger(value));
+        } else if (isBooleanOption(option)) {
+            config.set(itemPath + "." + option, Boolean.parseBoolean(value));
+        } else if (value.isBlank() && isOptionalOption(option)) {
+            config.set(itemPath + "." + option, null);
+        } else {
+            config.set(itemPath + "." + option, value);
+        }
+    }
+
+    private void setMenuOption(
+            final @NotNull YamlConfiguration config,
+            final @NotNull String root,
+            final @NotNull String option,
+            final @NotNull String value
+    ) throws IOException {
         if ("menu_title".equals(option) && value.isBlank()) {
             throw new IOException("Menu title cannot be empty");
         } else if ("size".equals(option)) {
@@ -131,9 +165,6 @@ public class MenuConfigEditor {
         } else {
             config.set(root + option, value);
         }
-
-        save(menu, config);
-        return true;
     }
 
     public @NotNull Optional<String> getMenuString(final @NotNull Menu menu, final @NotNull String option) {
@@ -162,7 +193,7 @@ public class MenuConfigEditor {
         final boolean subMenu = menu.options().subMenu();
         final boolean mainConfigMenu = "config".equalsIgnoreCase(menu.path());
 
-        Menu.unload(plugin, menuName);
+        Menu.unload(plugin, menuName, subMenu);
         plugin.reloadConfig();
         plugin.reload();
 

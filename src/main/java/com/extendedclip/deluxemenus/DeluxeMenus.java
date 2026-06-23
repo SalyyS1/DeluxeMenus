@@ -317,6 +317,10 @@ public class DeluxeMenus extends JavaPlugin {
             this.itemHooks.put("mmoitems", new MMOItemsHook(this));
         }
 
+        if (Bukkit.getPluginManager().isPluginEnabled("MythicMobs")) {
+            this.itemHooks.put("mythicmobs", new MythicMobsHook());
+        }
+
         if (Bukkit.getPluginManager().isPluginEnabled("ExecutableItems")) {
             this.itemHooks.put("executableitems", new ExecutableItemsHook());
         }

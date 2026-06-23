@@ -20,8 +20,8 @@ public final class MenuEditPromptRegistry {
     private MenuEditPromptRegistry() {
     }
 
-    public static void begin(final @NotNull Player player, final @NotNull String menuName, final int slot, final @NotNull String option) {
-        PROMPTS.put(player.getUniqueId(), new Prompt(menuName, slot, option));
+    public static void begin(final @NotNull Player player, final @NotNull String menuName, final boolean subMenu, final int slot, final @NotNull String option) {
+        PROMPTS.put(player.getUniqueId(), new Prompt(menuName, subMenu, slot, option));
     }
 
     public static boolean hasPrompt(final @NotNull Player player) {
@@ -43,7 +43,7 @@ public final class MenuEditPromptRegistry {
             return;
         }
 
-        final Optional<Menu> optionalMenu = findMenu(prompt.menuName);
+        final Optional<Menu> optionalMenu = findMenu(prompt.menuName, prompt.subMenu);
         if (optionalMenu.isEmpty()) {
             plugin.sms(player, text("Menu is no longer loaded.", NamedTextColor.RED));
             return;
@@ -61,25 +61,22 @@ public final class MenuEditPromptRegistry {
 
         configEditor.reload(menu);
         plugin.sms(player, text("Updated " + prompt.option + " for slot " + prompt.slot + " in " + configEditor.describeTarget(menu) + ".", NamedTextColor.GREEN));
-        findMenu(prompt.menuName).ifPresent(reloaded -> new MenuEditorManager(plugin).openSlot(player, reloaded, prompt.slot));
+        findMenu(prompt.menuName, prompt.subMenu).ifPresent(reloaded -> new MenuEditorManager(plugin).openSlot(player, reloaded, prompt.slot));
     }
 
-    private static @NotNull Optional<Menu> findMenu(final @NotNull String menuName) {
-        final Optional<Menu> menu = Menu.getMenuByName(menuName);
-        if (menu.isPresent()) {
-            return menu;
-        }
-
-        return Menu.getSubMenuByName(menuName);
+    private static @NotNull Optional<Menu> findMenu(final @NotNull String menuName, final boolean subMenu) {
+        return subMenu ? Menu.getSubMenuByName(menuName) : Menu.getMenuByName(menuName);
     }
 
     private static class Prompt {
         private final String menuName;
+        private final boolean subMenu;
         private final int slot;
         private final String option;
 
-        private Prompt(final @NotNull String menuName, final int slot, final @NotNull String option) {
+        private Prompt(final @NotNull String menuName, final boolean subMenu, final int slot, final @NotNull String option) {
             this.menuName = menuName;
+            this.subMenu = subMenu;
             this.slot = slot;
             this.option = option;
         }

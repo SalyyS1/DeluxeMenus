@@ -49,7 +49,7 @@ public class MenuEditorManager {
 
     public void open(final @NotNull Player player, final @NotNull Menu menu) {
         final int size = menu.options().size();
-        final MenuEditorHolder editorHolder = new MenuEditorHolder(menu.options().name());
+        final MenuEditorHolder editorHolder = new MenuEditorHolder(menu.options().name(), menu.options().subMenu());
         final Inventory inventory = Bukkit.createInventory(editorHolder, size, title("Edit: " + menu.options().name()));
         editorHolder.setInventory(inventory);
 
@@ -70,7 +70,7 @@ public class MenuEditorManager {
     }
 
     public void openSlot(final @NotNull Player player, final @NotNull Menu menu, final int slot) {
-        final MenuEditorHolder editorHolder = new MenuEditorHolder(menu.options().name(), MenuEditorHolder.View.SLOT, slot);
+        final MenuEditorHolder editorHolder = new MenuEditorHolder(menu.options().name(), menu.options().subMenu(), MenuEditorHolder.View.SLOT, slot);
         final Inventory inventory = Bukkit.createInventory(editorHolder, 54, title("Slot " + slot + ": " + menu.options().name()));
         editorHolder.setInventory(inventory);
 

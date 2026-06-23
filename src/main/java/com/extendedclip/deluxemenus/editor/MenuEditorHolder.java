@@ -12,22 +12,28 @@ public class MenuEditorHolder implements InventoryHolder {
     }
 
     private final String menuName;
+    private final boolean subMenu;
     private final View view;
     private final int slot;
     private Inventory inventory;
 
-    public MenuEditorHolder(final @NotNull String menuName) {
-        this(menuName, View.PREVIEW, -1);
+    public MenuEditorHolder(final @NotNull String menuName, final boolean subMenu) {
+        this(menuName, subMenu, View.PREVIEW, -1);
     }
 
-    public MenuEditorHolder(final @NotNull String menuName, final @NotNull View view, final int slot) {
+    public MenuEditorHolder(final @NotNull String menuName, final boolean subMenu, final @NotNull View view, final int slot) {
         this.menuName = menuName;
+        this.subMenu = subMenu;
         this.view = view;
         this.slot = slot;
     }
 
     public @NotNull String menuName() {
         return this.menuName;
+    }
+
+    public boolean subMenu() {
+        return this.subMenu;
     }
 
     public @NotNull View view() {
